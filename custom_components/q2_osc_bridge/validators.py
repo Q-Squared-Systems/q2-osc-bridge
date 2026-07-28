@@ -8,6 +8,8 @@ from typing import Any
 
 import voluptuous as vol
 
+PORT_SCHEMA = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
+
 
 def validate_port(value: Any) -> int:
     """Validate a UDP port."""

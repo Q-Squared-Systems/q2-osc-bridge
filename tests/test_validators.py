@@ -2,13 +2,21 @@ from __future__ import annotations
 
 import pytest
 import voluptuous as vol
+from voluptuous_serialize import convert
 
 from custom_components.q2_osc_bridge.validators import (
+    PORT_SCHEMA,
     normalize_allowed_source_ips,
     normalize_osc_arguments,
     validate_osc_address,
     validate_port,
 )
+
+
+def test_port_schema_is_config_flow_serializable() -> None:
+    schema = vol.Schema({vol.Required("port", default=9000): PORT_SCHEMA})
+
+    assert convert(schema)
 
 
 def test_validate_port_accepts_udp_range() -> None:

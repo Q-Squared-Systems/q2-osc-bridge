@@ -21,7 +21,7 @@ from .const import (
     DEFAULT_RECEIVE_ENABLED,
     DOMAIN,
 )
-from .validators import normalize_allowed_source_ips, validate_port
+from .validators import PORT_SCHEMA, normalize_allowed_source_ips, validate_port
 
 
 class Q2OscBridgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -68,7 +68,7 @@ def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
             vol.Required(
                 CONF_REMOTE_PORT,
                 default=defaults.get(CONF_REMOTE_PORT, 9000),
-            ): validate_port,
+            ): PORT_SCHEMA,
             vol.Required(
                 CONF_RECEIVE_ENABLED,
                 default=defaults.get(CONF_RECEIVE_ENABLED, DEFAULT_RECEIVE_ENABLED),
@@ -80,7 +80,7 @@ def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
             vol.Required(
                 CONF_LOCAL_PORT,
                 default=defaults.get(CONF_LOCAL_PORT, 9001),
-            ): validate_port,
+            ): PORT_SCHEMA,
             vol.Optional(
                 CONF_ALLOWED_SOURCE_IPS,
                 default=", ".join(defaults.get(CONF_ALLOWED_SOURCE_IPS, [])),
