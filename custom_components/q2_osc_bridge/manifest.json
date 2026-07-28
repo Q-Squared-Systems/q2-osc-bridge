@@ -9,5 +9,5 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/Q-Squared-Systems/q2-osc-bridge/issues",
   "requirements": ["python-osc>=1.8.3"],
-  "version": "0.1.7"
+  "version": "0.1.8"
 }

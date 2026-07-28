@@ -10,6 +10,8 @@ from custom_components.q2_osc_bridge.entity_mapping import (
     create_button_mapping,
     create_number_mapping,
     create_sensor_mapping,
+    create_switch_mapping,
+    create_text_mapping,
     mappings_from_entry,
 )
 
@@ -75,6 +77,54 @@ def test_number_mapping_rejects_invalid_range() -> None:
 def test_number_mapping_requires_target_path() -> None:
     with pytest.raises(ValueError):
         create_number_mapping("Opacity", "layer/1/opacity")
+
+
+def test_options_flow_creates_integer_mapping() -> None:
+    mapping = create_number_mapping(
+        "Cue Index",
+        "/cue/index",
+        "/cue/index/feedback",
+        min_value=0,
+        max_value=255,
+        step=1,
+        osc_type="i",
+    )
+
+    assert mapping.platform == "number"
+    assert mapping.osc_type == "i"
+    assert mapping.step == 1
+    assert mapping.send_address == "/cue/index"
+    assert mapping.receive_address == "/cue/index/feedback"
+
+
+def test_options_flow_creates_boolean_mapping() -> None:
+    mapping = create_switch_mapping(
+        "Layer Visible", "/layer/1/visible", "/layer/1/visible/feedback"
+    )
+
+    assert mapping.platform == "switch"
+    assert mapping.osc_type == "T/F"
+    assert mapping.send_address == "/layer/1/visible"
+    assert mapping.receive_address == "/layer/1/visible/feedback"
+
+
+def test_boolean_mapping_requires_target_path() -> None:
+    with pytest.raises(ValueError):
+        create_switch_mapping("Layer Visible", "layer/1/visible")
+
+
+def test_options_flow_creates_text_mapping() -> None:
+    mapping = create_text_mapping("Label", "/layer/1/name", "/layer/1/name/feedback")
+
+    assert mapping.platform == "text"
+    assert mapping.osc_type == "s"
+    assert mapping.send_address == "/layer/1/name"
+    assert mapping.receive_address == "/layer/1/name/feedback"
+
+
+def test_text_mapping_requires_target_path() -> None:
+    with pytest.raises(ValueError):
+        create_text_mapping("Label", "layer/1/name")
 
 
 def test_options_flow_creates_sensor_mapping_from_source_path() -> None:

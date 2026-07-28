@@ -32,6 +32,8 @@ from .entity_mapping import (
     create_button_mapping,
     create_number_mapping,
     create_sensor_mapping,
+    create_switch_mapping,
+    create_text_mapping,
 )
 from .validators import PORT_SCHEMA, normalize_allowed_source_ips, validate_port
 
@@ -121,6 +123,9 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
         menu_options = {
             "add_mapping": "Add button control",
             "add_number_mapping": "Add float control",
+            "add_integer_mapping": "Add integer control",
+            "add_switch_mapping": "Add boolean control",
+            "add_text_mapping": "Add string control",
             "add_sensor_mapping": "Add sensor monitor",
         }
         if self.config_entry.options.get(CONF_MAPPINGS):
@@ -166,6 +171,69 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="add_number_mapping",
             data_schema=_number_mapping_schema(user_input),
+            errors=errors,
+        )
+
+    async def async_step_add_integer_mapping(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Add one integer number entity mapping."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                mapping = _integer_mapping_from_user_input(user_input)
+            except (ValueError, vol.Invalid):
+                errors["base"] = "invalid_mapping"
+            else:
+                mappings = list(self.config_entry.options.get(CONF_MAPPINGS, []))
+                return self._async_create_mapping_entry(mappings, mapping)
+
+        return self.async_show_form(
+            step_id="add_integer_mapping",
+            data_schema=_integer_mapping_schema(user_input),
+            errors=errors,
+        )
+
+    async def async_step_add_switch_mapping(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Add one boolean switch entity mapping."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                mapping = _switch_mapping_from_user_input(user_input)
+            except (ValueError, vol.Invalid):
+                errors["base"] = "invalid_mapping"
+            else:
+                mappings = list(self.config_entry.options.get(CONF_MAPPINGS, []))
+                return self._async_create_mapping_entry(mappings, mapping)
+
+        return self.async_show_form(
+            step_id="add_switch_mapping",
+            data_schema=_send_receive_mapping_schema(user_input),
+            errors=errors,
+        )
+
+    async def async_step_add_text_mapping(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Add one string text entity mapping."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                mapping = _text_mapping_from_user_input(user_input)
+            except (ValueError, vol.Invalid):
+                errors["base"] = "invalid_mapping"
+            else:
+                mappings = list(self.config_entry.options.get(CONF_MAPPINGS, []))
+                return self._async_create_mapping_entry(mappings, mapping)
+
+        return self.async_show_form(
+            step_id="add_text_mapping",
+            data_schema=_send_receive_mapping_schema(user_input),
             errors=errors,
         )
 
@@ -286,6 +354,52 @@ def _number_mapping_schema(defaults: dict[str, Any] | None = None) -> vol.Schema
     )
 
 
+def _integer_mapping_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
+    """Return the integer number entity mapping form."""
+    defaults = defaults or {}
+    return vol.Schema(
+        {
+            vol.Required(CONF_NAME, default=defaults.get(CONF_NAME, "")): str,
+            vol.Required(
+                CONF_SEND_ADDRESS,
+                default=defaults.get(CONF_SEND_ADDRESS, ""),
+            ): str,
+            vol.Optional(
+                CONF_RECEIVE_ADDRESS,
+                default=defaults.get(CONF_RECEIVE_ADDRESS, ""),
+            ): str,
+            vol.Optional(
+                CONF_MIN_VALUE,
+                default=defaults.get(CONF_MIN_VALUE, 0),
+            ): vol.Coerce(int),
+            vol.Optional(
+                CONF_MAX_VALUE,
+                default=defaults.get(CONF_MAX_VALUE, 100),
+            ): vol.Coerce(int),
+        }
+    )
+
+
+def _send_receive_mapping_schema(
+    defaults: dict[str, Any] | None = None,
+) -> vol.Schema:
+    """Return a send/optional receive mapping form."""
+    defaults = defaults or {}
+    return vol.Schema(
+        {
+            vol.Required(CONF_NAME, default=defaults.get(CONF_NAME, "")): str,
+            vol.Required(
+                CONF_SEND_ADDRESS,
+                default=defaults.get(CONF_SEND_ADDRESS, ""),
+            ): str,
+            vol.Optional(
+                CONF_RECEIVE_ADDRESS,
+                default=defaults.get(CONF_RECEIVE_ADDRESS, ""),
+            ): str,
+        }
+    )
+
+
 def _mapping_from_user_input(user_input: dict[str, Any]) -> OscEntityMapping:
     """Validate and normalize a mapping form submission."""
     return create_button_mapping(
@@ -303,6 +417,38 @@ def _number_mapping_from_user_input(user_input: dict[str, Any]) -> OscEntityMapp
         min_value=float(user_input.get(CONF_MIN_VALUE, 0)),
         max_value=float(user_input.get(CONF_MAX_VALUE, 100)),
         step=float(user_input.get(CONF_STEP, 1)),
+        osc_type="f",
+    )
+
+
+def _integer_mapping_from_user_input(user_input: dict[str, Any]) -> OscEntityMapping:
+    """Validate and normalize an integer number mapping form submission."""
+    return create_number_mapping(
+        name=str(user_input[CONF_NAME]),
+        target_path=str(user_input.get(CONF_SEND_ADDRESS, "")),
+        source_path=str(user_input.get(CONF_RECEIVE_ADDRESS, "")),
+        min_value=int(user_input.get(CONF_MIN_VALUE, 0)),
+        max_value=int(user_input.get(CONF_MAX_VALUE, 100)),
+        step=1,
+        osc_type="i",
+    )
+
+
+def _switch_mapping_from_user_input(user_input: dict[str, Any]) -> OscEntityMapping:
+    """Validate and normalize a boolean switch mapping form submission."""
+    return create_switch_mapping(
+        name=str(user_input[CONF_NAME]),
+        target_path=str(user_input.get(CONF_SEND_ADDRESS, "")),
+        source_path=str(user_input.get(CONF_RECEIVE_ADDRESS, "")),
+    )
+
+
+def _text_mapping_from_user_input(user_input: dict[str, Any]) -> OscEntityMapping:
+    """Validate and normalize a string text mapping form submission."""
+    return create_text_mapping(
+        name=str(user_input[CONF_NAME]),
+        target_path=str(user_input.get(CONF_SEND_ADDRESS, "")),
+        source_path=str(user_input.get(CONF_RECEIVE_ADDRESS, "")),
     )
 
 

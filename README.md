@@ -8,8 +8,8 @@ HAOS and HACS distribution, and it runs as a normal custom integration rather
 than as an add-on, daemon, or external service.
 
 The current release provides real OSC sending, incoming feedback, Home Assistant
-events, diagnostics, and working entity mappings for buttons, float controls,
-and sensor monitors.
+events, diagnostics, and working entity mappings for buttons, floats, integers,
+booleans, strings, and sensor monitors.
 
 ## Installation
 
@@ -105,7 +105,8 @@ Pressing the button sends one OSC message with no arguments to the target path.
 
 ### Float Control
 
-**Add float control** creates a Home Assistant `number` entity.
+**Add float control** creates a Home Assistant `number` entity for OSC `f`
+arguments.
 
 Fields:
 
@@ -127,6 +128,53 @@ Example:
 - Minimum: `0`
 - Maximum: `1`
 - Step: `0.01`
+
+### Integer Control
+
+**Add integer control** creates a Home Assistant `number` entity for OSC `i`
+arguments.
+
+Fields:
+
+- Control name
+- Target path
+- Optional source path
+- Minimum
+- Maximum
+
+Changing the Home Assistant number sends the new integer value as the first OSC
+argument to the target path. If a source path is set, incoming OSC feedback at
+that path updates the number entity directly. Integer controls use a fixed step
+of `1`.
+
+### Boolean Control
+
+**Add boolean control** creates a Home Assistant `switch` entity for OSC `T/F`
+arguments.
+
+Fields:
+
+- Control name
+- Target path
+- Optional source path
+
+Turning the switch on sends OSC true. Turning it off sends OSC false. If a
+source path is set, incoming boolean-style feedback updates the switch directly.
+
+### String Control
+
+**Add string control** creates a Home Assistant `text` entity for OSC `s`
+arguments.
+
+Fields:
+
+- Control name
+- Target path
+- Optional source path
+
+Changing the text value sends it as the first OSC string argument to the target
+path. If a source path is set, incoming OSC feedback at that path updates the
+text entity directly.
 
 ### Sensor Monitor
 
@@ -185,8 +233,8 @@ appropriate, plus runtime counters for:
 - Button controls send no arguments.
 - Float feedback values are accepted as raw floats; display rounding/clamping is
   planned.
-- Switch, binary sensor, and select platforms have scaffolding but are not yet
-  exposed in the Configure UI.
+- Binary sensor and select platforms have scaffolding but are not yet exposed in
+  the Configure UI.
 
 ## Development
 
@@ -208,7 +256,7 @@ Roadmap:
 
 - Add editing for existing entity mappings.
 - Add float feedback rounding and min/max clamping.
-- Add switch, binary sensor, and select mapping flows.
+- Add binary sensor and select mapping flows.
 - Add endpoint network settings to the options flow.
 - Add import/export for mapping presets.
 - Add value transforms, availability rules, and restore behavior.

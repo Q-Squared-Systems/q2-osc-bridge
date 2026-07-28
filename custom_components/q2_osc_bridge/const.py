@@ -20,6 +20,7 @@ CONF_OPTIONS = "options"
 CONF_MIN_VALUE = "min_value"
 CONF_MAX_VALUE = "max_value"
 CONF_STEP = "step"
+CONF_OSC_TYPE = "osc_type"
 
 DEFAULT_BIND_ADDRESS = "0.0.0.0"
 DEFAULT_RECEIVE_ENABLED = True
@@ -37,6 +38,7 @@ PLATFORMS = [
     "sensor",
     "binary_sensor",
     "select",
+    "text",
 ]
 
 MAPPING_PLATFORMS = tuple(PLATFORMS)

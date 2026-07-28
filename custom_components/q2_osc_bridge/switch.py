@@ -30,17 +30,17 @@ class Q2OscSwitch(Q2OscMappingEntity, SwitchEntity):
     _attr_is_on = False
 
     async def async_turn_on(self, **kwargs: object) -> None:
-        """Turn on and send one."""
+        """Turn on and send OSC true."""
         self._attr_is_on = True
         if self.mapping.send_address:
-            await self.endpoint.async_send(self.mapping.send_address, [1])
+            await self.endpoint.async_send(self.mapping.send_address, [True])
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: object) -> None:
-        """Turn off and send zero."""
+        """Turn off and send OSC false."""
         self._attr_is_on = False
         if self.mapping.send_address:
-            await self.endpoint.async_send(self.mapping.send_address, [0])
+            await self.endpoint.async_send(self.mapping.send_address, [False])
         self.async_write_ha_state()
 
     def _apply_received_value(self, value: object) -> None:

@@ -23,6 +23,7 @@ class OscEntityMapping:
     min_value: float = 0
     max_value: float = 100
     step: float = 1
+    osc_type: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
         """Return a config-entry-safe representation."""
@@ -42,6 +43,7 @@ class OscEntityMapping:
             min_value=float(data.get("min_value", 0)),
             max_value=float(data.get("max_value", 100)),
             step=float(data.get("step", 1)),
+            osc_type=data.get("osc_type") or None,
         )
 
 
@@ -100,14 +102,15 @@ def create_number_mapping(
     min_value: float = 0,
     max_value: float = 100,
     step: float = 1,
+    osc_type: str = "f",
 ) -> OscEntityMapping:
-    """Create a float number mapping from user-facing fields."""
+    """Create a number mapping from user-facing fields."""
     name = name.strip()
     target_path = target_path.strip()
     source_path = source_path.strip() if source_path else None
 
     if not name:
-        raise ValueError("float control name is required")
+        raise ValueError("number control name is required")
     if not target_path:
         raise ValueError("target path is required")
     if not target_path.startswith("/"):
@@ -118,6 +121,8 @@ def create_number_mapping(
         raise ValueError("minimum must be less than maximum")
     if step <= 0:
         raise ValueError("step must be positive")
+    if osc_type not in {"i", "f"}:
+        raise ValueError("number control OSC type must be i or f")
 
     return OscEntityMapping(
         platform="number",
@@ -128,4 +133,63 @@ def create_number_mapping(
         min_value=min_value,
         max_value=max_value,
         step=step,
+        osc_type=osc_type,
+    )
+
+
+def create_switch_mapping(
+    name: str,
+    target_path: str,
+    source_path: str | None = None,
+) -> OscEntityMapping:
+    """Create a boolean switch mapping from user-facing fields."""
+    name = name.strip()
+    target_path = target_path.strip()
+    source_path = source_path.strip() if source_path else None
+
+    if not name:
+        raise ValueError("boolean control name is required")
+    if not target_path:
+        raise ValueError("target path is required")
+    if not target_path.startswith("/"):
+        raise ValueError("target path must start with /")
+    if source_path and not source_path.startswith("/"):
+        raise ValueError("source path must start with /")
+
+    return OscEntityMapping(
+        platform="switch",
+        key=uuid4().hex,
+        name=name,
+        send_address=target_path,
+        receive_address=source_path,
+        osc_type="T/F",
+    )
+
+
+def create_text_mapping(
+    name: str,
+    target_path: str,
+    source_path: str | None = None,
+) -> OscEntityMapping:
+    """Create a string text mapping from user-facing fields."""
+    name = name.strip()
+    target_path = target_path.strip()
+    source_path = source_path.strip() if source_path else None
+
+    if not name:
+        raise ValueError("string control name is required")
+    if not target_path:
+        raise ValueError("target path is required")
+    if not target_path.startswith("/"):
+        raise ValueError("target path must start with /")
+    if source_path and not source_path.startswith("/"):
+        raise ValueError("source path must start with /")
+
+    return OscEntityMapping(
+        platform="text",
+        key=uuid4().hex,
+        name=name,
+        send_address=target_path,
+        receive_address=source_path,
+        osc_type="s",
     )

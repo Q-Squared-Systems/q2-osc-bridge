@@ -29,6 +29,9 @@
         "menu_options": {
           "add_mapping": "Add button control",
           "add_number_mapping": "Add float control",
+          "add_integer_mapping": "Add integer control",
+          "add_switch_mapping": "Add boolean control",
+          "add_text_mapping": "Add string control",
           "add_sensor_mapping": "Add sensor monitor",
           "remove_mapping": "Remove entity mapping"
         }
@@ -51,6 +54,35 @@
           "min_value": "Minimum",
           "max_value": "Maximum",
           "step": "Step"
+        }
+      },
+      "add_integer_mapping": {
+        "title": "Add OSC integer control",
+        "description": "Create a Home Assistant number entity that sends integer values and can optionally follow incoming feedback.",
+        "data": {
+          "name": "Control name",
+          "send_address": "Target path",
+          "receive_address": "Source path",
+          "min_value": "Minimum",
+          "max_value": "Maximum"
+        }
+      },
+      "add_switch_mapping": {
+        "title": "Add OSC boolean control",
+        "description": "Create a Home Assistant switch that sends OSC true/false values and can optionally follow incoming feedback.",
+        "data": {
+          "name": "Control name",
+          "send_address": "Target path",
+          "receive_address": "Source path"
+        }
+      },
+      "add_text_mapping": {
+        "title": "Add OSC string control",
+        "description": "Create a Home Assistant text entity that sends string values and can optionally follow incoming feedback.",
+        "data": {
+          "name": "Control name",
+          "send_address": "Target path",
+          "receive_address": "Source path"
         }
       },
       "add_sensor_mapping": {
