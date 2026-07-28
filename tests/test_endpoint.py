@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 from custom_components.q2_osc_bridge.const import EVENT_OSC_MESSAGE
 from custom_components.q2_osc_bridge.endpoint import (
     EndpointConfig,
@@ -105,3 +107,28 @@ def test_endpoint_notifies_and_removes_message_listener() -> None:
     assert len(messages) == 1
     assert messages[0]["address"] == "/mapped"
     assert messages[0]["arguments"] == [7]
+
+
+@pytest.mark.asyncio
+async def test_endpoint_stop_releases_udp_port_before_restart() -> None:
+    first = Q2OscEndpoint(
+        hass=None,
+        config=_endpoint_config(local_bind_address="127.0.0.1", local_port=0),
+    )
+    try:
+        await first.async_start()
+    except PermissionError:
+        pytest.skip("local UDP socket binding is blocked in this environment")
+    transport = first._transport
+    assert transport is not None
+    sock = transport.get_extra_info("socket")
+    port = sock.getsockname()[1]
+
+    await first.async_stop()
+
+    second = Q2OscEndpoint(
+        hass=None,
+        config=_endpoint_config(local_bind_address="127.0.0.1", local_port=port),
+    )
+    await second.async_start()
+    await second.async_stop()

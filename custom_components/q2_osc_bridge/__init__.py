@@ -90,11 +90,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload one OSC endpoint."""
+    endpoint: Q2OscEndpoint | None = hass.data[DOMAIN].pop(entry.entry_id, None)
+    if endpoint is not None:
+        await endpoint.async_stop()
+
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unloaded:
-        endpoint: Q2OscEndpoint | None = hass.data[DOMAIN].pop(entry.entry_id, None)
-        if endpoint is not None:
-            await endpoint.async_stop()
+    if not unloaded and endpoint is not None:
+        hass.data[DOMAIN][entry.entry_id] = endpoint
     return unloaded
 
 

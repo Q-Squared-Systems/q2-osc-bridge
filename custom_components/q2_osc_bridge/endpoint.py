@@ -57,6 +57,7 @@ class Q2OscDatagramProtocol(asyncio.DatagramProtocol):
 
     def __init__(self, endpoint: Q2OscEndpoint) -> None:
         self.endpoint = endpoint
+        self._closed = asyncio.get_running_loop().create_future()
 
     def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         """Handle one incoming UDP datagram."""
@@ -65,6 +66,15 @@ class Q2OscDatagramProtocol(asyncio.DatagramProtocol):
     def error_received(self, exc: Exception) -> None:
         """Track UDP transport errors."""
         self.endpoint.diagnostics.decode_errors += 1
+
+    def connection_lost(self, exc: Exception | None) -> None:
+        """Mark the UDP transport as fully closed."""
+        if not self._closed.done():
+            self._closed.set_result(None)
+
+    async def async_wait_closed(self) -> None:
+        """Wait until asyncio has finished closing the UDP transport."""
+        await self._closed
 
 
 class Q2OscEndpoint:
@@ -80,6 +90,7 @@ class Q2OscEndpoint:
         self.config = config
         self.diagnostics = EndpointDiagnostics()
         self._transport: asyncio.DatagramTransport | None = None
+        self._protocol: Q2OscDatagramProtocol | None = None
         self._event_callback = event_callback
         self._message_listeners: set[Callable[[dict[str, Any]], None]] = set()
 
@@ -96,17 +107,24 @@ class Q2OscEndpoint:
     async def async_start(self) -> None:
         """Bind the UDP transport for this endpoint."""
         loop = self.hass.loop if self.hass is not None else asyncio.get_running_loop()
-        transport, _protocol = await loop.create_datagram_endpoint(
+        transport, protocol = await loop.create_datagram_endpoint(
             lambda: Q2OscDatagramProtocol(self),
             local_addr=(self.config.local_bind_address, self.config.local_port),
         )
         self._transport = transport
+        self._protocol = protocol
 
     async def async_stop(self) -> None:
         """Close the UDP transport."""
-        if self._transport is not None:
-            self._transport.close()
-            self._transport = None
+        transport = self._transport
+        protocol = self._protocol
+        self._transport = None
+        self._protocol = None
+
+        if transport is not None:
+            transport.close()
+        if protocol is not None:
+            await asyncio.wait_for(protocol.async_wait_closed(), timeout=1)
 
     def add_message_listener(
         self,
