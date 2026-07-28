@@ -1,9 +1,10 @@
 {
   "title": "Q2 OSC Bridge",
   "config": {
+    "entry_type": "Target",
     "step": {
       "user": {
-        "title": "Create OSC endpoint",
+        "title": "Create OSC target",
         "data": {
           "name": "Name",
           "remote_host": "Remote host",
@@ -16,7 +17,7 @@
       }
     },
     "error": {
-      "invalid_config": "Endpoint settings are invalid."
+      "invalid_config": "Target settings are invalid."
     },
     "abort": {
       "already_configured": "This local bind address and port are already configured."

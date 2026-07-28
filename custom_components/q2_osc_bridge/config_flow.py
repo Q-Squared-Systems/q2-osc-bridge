@@ -118,9 +118,13 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Show mapping management actions."""
-        menu_options = ["add_mapping", "add_number_mapping", "add_sensor_mapping"]
+        menu_options = {
+            "add_mapping": "Add button control",
+            "add_number_mapping": "Add float control",
+            "add_sensor_mapping": "Add sensor monitor",
+        }
         if self.config_entry.options.get(CONF_MAPPINGS):
-            menu_options.append("remove_mapping")
+            menu_options["remove_mapping"] = "Remove entity mapping"
         return self.async_show_menu(step_id="init", menu_options=menu_options)
 
     async def async_step_add_mapping(
