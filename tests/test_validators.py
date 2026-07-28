@@ -4,6 +4,7 @@ import pytest
 import voluptuous as vol
 from voluptuous_serialize import convert
 
+from custom_components.q2_osc_bridge.const import DEFAULT_BIND_ADDRESS
 from custom_components.q2_osc_bridge.validators import (
     PORT_SCHEMA,
     normalize_allowed_source_ips,
@@ -11,6 +12,10 @@ from custom_components.q2_osc_bridge.validators import (
     validate_osc_address,
     validate_port,
 )
+
+
+def test_default_bind_address_listens_on_all_interfaces() -> None:
+    assert DEFAULT_BIND_ADDRESS == "0.0.0.0"
 
 
 def test_port_schema_is_config_flow_serializable() -> None:

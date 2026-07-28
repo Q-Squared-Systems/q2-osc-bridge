@@ -12,10 +12,12 @@ try:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant, ServiceCall
     from homeassistant.helpers import config_validation as cv
+    from homeassistant.helpers import device_registry as dr
 except ModuleNotFoundError:
     ConfigEntry = Any
     HomeAssistant = Any
     ServiceCall = Any
+    dr = None
 
     class _ConfigValidationFallback:
         string: Callable[[Any], str] = str
@@ -81,6 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await endpoint.async_start()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = endpoint
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -93,6 +96,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if endpoint is not None:
             await endpoint.async_stop()
     return unloaded
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload an endpoint after its options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 def _endpoint_config_from_entry(entry: ConfigEntry) -> EndpointConfig:
@@ -125,8 +133,9 @@ def _resolve_endpoint(
 
     endpoint_name = call.data.get(ATTR_ENDPOINT)
     if endpoint_name:
+        normalized_name = _normalize_endpoint_name(endpoint_name)
         for endpoint in endpoints.values():
-            if endpoint.name == endpoint_name or endpoint.entry_id == endpoint_name:
+            if normalized_name in _endpoint_aliases(hass, endpoint):
                 return endpoint
         return None
 
@@ -135,3 +144,29 @@ def _resolve_endpoint(
 
     _LOGGER.warning("Multiple OSC endpoints exist; include endpoint or config_entry_id")
     return None
+
+
+def _endpoint_aliases(
+    hass: HomeAssistant,
+    endpoint: Q2OscEndpoint,
+) -> set[str]:
+    """Return normalized names that can identify an endpoint."""
+    aliases = {endpoint.name, endpoint.entry_id}
+
+    entry = hass.config_entries.async_get_entry(endpoint.entry_id)
+    if entry is not None:
+        aliases.add(entry.title)
+
+    if dr is not None:
+        device = dr.async_get(hass).async_get_device(
+            identifiers={(DOMAIN, endpoint.entry_id)}
+        )
+        if device is not None:
+            aliases.update(name for name in (device.name_by_user, device.name) if name)
+
+    return {_normalize_endpoint_name(alias) for alias in aliases}
+
+
+def _normalize_endpoint_name(value: Any) -> str:
+    """Normalize an endpoint selector for user-friendly matching."""
+    return str(value).strip().casefold()

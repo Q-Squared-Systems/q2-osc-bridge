@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .endpoint import Q2OscEndpoint
 from .entity_base import Q2OscMappingEntity
-from .entity_mapping import default_mappings
+from .entity_mapping import OscEntityMapping, mappings_from_entry
 
 
 async def async_setup_entry(
@@ -18,18 +18,32 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up placeholder select mappings."""
+    """Set up select mappings."""
     endpoint: Q2OscEndpoint = hass.data[DOMAIN][entry.entry_id]
-    mappings = [m for m in default_mappings(endpoint.name) if m.platform == "select"]
+    mappings = [m for m in mappings_from_entry(entry) if m.platform == "select"]
     async_add_entities(Q2OscSelect(endpoint, mapping) for mapping in mappings)
 
 
 class Q2OscSelect(Q2OscMappingEntity, SelectEntity):
-    """Placeholder select for future send/receive mappings."""
+    """Select backed by OSC string values."""
 
-    _attr_options = ["default"]
-    _attr_current_option = "default"
+    def __init__(
+        self,
+        endpoint: Q2OscEndpoint,
+        mapping: OscEntityMapping,
+    ) -> None:
+        super().__init__(endpoint, mapping)
+        self._attr_options = mapping.options
+        self._attr_current_option = mapping.options[0]
 
     async def async_select_option(self, option: str) -> None:
-        """Select the placeholder option."""
+        """Select and send an option."""
         self._attr_current_option = option
+        if self.mapping.send_address:
+            await self.endpoint.async_send(self.mapping.send_address, [option])
+        self.async_write_ha_state()
+
+    def _apply_received_value(self, value: object) -> None:
+        option = str(value)
+        if option in self._attr_options:
+            self._attr_current_option = option

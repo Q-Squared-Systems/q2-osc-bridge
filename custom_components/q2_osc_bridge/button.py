@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .endpoint import Q2OscEndpoint
 from .entity_base import Q2OscMappingEntity
-from .entity_mapping import default_mappings
+from .entity_mapping import mappings_from_entry
 
 
 async def async_setup_entry(
@@ -18,14 +18,14 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up placeholder button mappings."""
+    """Set up button mappings."""
     endpoint: Q2OscEndpoint = hass.data[DOMAIN][entry.entry_id]
-    mappings = [m for m in default_mappings(endpoint.name) if m.platform == "button"]
+    mappings = [m for m in mappings_from_entry(entry) if m.platform == "button"]
     async_add_entities(Q2OscButton(endpoint, mapping) for mapping in mappings)
 
 
 class Q2OscButton(Q2OscMappingEntity, ButtonEntity):
-    """Placeholder button for future send mappings."""
+    """Button that sends an OSC message."""
 
     async def async_press(self) -> None:
         """Send the mapped OSC message."""

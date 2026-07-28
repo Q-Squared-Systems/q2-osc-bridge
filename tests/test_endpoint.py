@@ -87,3 +87,21 @@ def test_endpoint_counts_decode_errors() -> None:
     endpoint.handle_datagram(b"not osc", ("127.0.0.1", 53000))
 
     assert endpoint.diagnostics.decode_errors == 1
+
+
+def test_endpoint_notifies_and_removes_message_listener() -> None:
+    messages: list[dict[str, Any]] = []
+    endpoint = Q2OscEndpoint(
+        hass=None,
+        config=_endpoint_config(),
+        event_callback=lambda event_type, event_data: None,
+    )
+    remove_listener = endpoint.add_message_listener(messages.append)
+
+    endpoint.handle_datagram(build_osc_message("/mapped", [7]), ("127.0.0.1", 53000))
+    remove_listener()
+    endpoint.handle_datagram(build_osc_message("/mapped", [8]), ("127.0.0.1", 53000))
+
+    assert len(messages) == 1
+    assert messages[0]["address"] == "/mapped"
+    assert messages[0]["arguments"] == [7]

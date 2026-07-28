@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .endpoint import Q2OscEndpoint
 from .entity_base import Q2OscMappingEntity
-from .entity_mapping import default_mappings
+from .entity_mapping import mappings_from_entry
 
 
 async def async_setup_entry(
@@ -18,21 +18,36 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up placeholder switch mappings."""
+    """Set up switch mappings."""
     endpoint: Q2OscEndpoint = hass.data[DOMAIN][entry.entry_id]
-    mappings = [m for m in default_mappings(endpoint.name) if m.platform == "switch"]
+    mappings = [m for m in mappings_from_entry(entry) if m.platform == "switch"]
     async_add_entities(Q2OscSwitch(endpoint, mapping) for mapping in mappings)
 
 
 class Q2OscSwitch(Q2OscMappingEntity, SwitchEntity):
-    """Placeholder switch for future send/receive mappings."""
+    """Switch backed by OSC boolean values."""
 
-    _attr_is_on = True
+    _attr_is_on = False
 
     async def async_turn_on(self, **kwargs: object) -> None:
-        """Turn the placeholder switch on."""
+        """Turn on and send one."""
         self._attr_is_on = True
+        if self.mapping.send_address:
+            await self.endpoint.async_send(self.mapping.send_address, [1])
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: object) -> None:
-        """Turn the placeholder switch off."""
+        """Turn off and send zero."""
         self._attr_is_on = False
+        if self.mapping.send_address:
+            await self.endpoint.async_send(self.mapping.send_address, [0])
+        self.async_write_ha_state()
+
+    def _apply_received_value(self, value: object) -> None:
+        self._attr_is_on = _as_bool(value)
+
+
+def _as_bool(value: object) -> bool:
+    if isinstance(value, str):
+        return value.strip().casefold() not in {"", "0", "false", "off", "no"}
+    return bool(value)

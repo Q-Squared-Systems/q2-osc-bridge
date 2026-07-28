@@ -12,6 +12,14 @@ CONF_RECEIVE_ENABLED = "receive_enabled"
 CONF_LOCAL_BIND_ADDRESS = "local_bind_address"
 CONF_LOCAL_PORT = "local_port"
 CONF_ALLOWED_SOURCE_IPS = "allowed_source_ips"
+CONF_MAPPINGS = "mappings"
+CONF_PLATFORM = "platform"
+CONF_SEND_ADDRESS = "send_address"
+CONF_RECEIVE_ADDRESS = "receive_address"
+CONF_OPTIONS = "options"
+CONF_MIN_VALUE = "min_value"
+CONF_MAX_VALUE = "max_value"
+CONF_STEP = "step"
 
 DEFAULT_BIND_ADDRESS = "0.0.0.0"
 DEFAULT_RECEIVE_ENABLED = True
@@ -30,3 +38,5 @@ PLATFORMS = [
     "binary_sensor",
     "select",
 ]
+
+MAPPING_PLATFORMS = tuple(PLATFORMS)

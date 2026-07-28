@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .endpoint import Q2OscEndpoint
 from .entity_base import Q2OscMappingEntity
-from .entity_mapping import default_mappings
+from .entity_mapping import mappings_from_entry
 
 
 async def async_setup_entry(
@@ -18,16 +18,16 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up placeholder sensor mappings."""
+    """Set up sensor mappings."""
     endpoint: Q2OscEndpoint = hass.data[DOMAIN][entry.entry_id]
-    mappings = [m for m in default_mappings(endpoint.name) if m.platform == "sensor"]
+    mappings = [m for m in mappings_from_entry(entry) if m.platform == "sensor"]
     async_add_entities(Q2OscSensor(endpoint, mapping) for mapping in mappings)
 
 
 class Q2OscSensor(Q2OscMappingEntity, SensorEntity):
-    """Placeholder sensor for future receive mappings."""
+    """Sensor updated by incoming OSC messages."""
 
-    @property
-    def native_value(self) -> str | None:
-        """Return the endpoint last message time for now."""
-        return self.endpoint.diagnostics.last_message_time
+    _attr_native_value = None
+
+    def _apply_received_value(self, value: object) -> None:
+        self._attr_native_value = value

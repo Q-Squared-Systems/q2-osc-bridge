@@ -7,10 +7,10 @@ integration rather than as a Home Assistant add-on or external service.
 
 ## Status
 
-This is an initial working skeleton. It includes endpoint setup, asyncio UDP
+This is an initial working integration. It includes endpoint setup, asyncio UDP
 transport ownership, OSC send/receive handling through `python-osc`, Home
-Assistant event emission, diagnostics counters, HACS metadata, and scaffolding
-for future entity mappings.
+Assistant event emission, diagnostics counters, HACS metadata, and configurable
+OSC entity mappings.
 
 ## Installation
 
@@ -77,6 +77,29 @@ data:
 
 Arguments may be a single scalar value, a list of values, or omitted.
 
+## Entity mappings
+
+Open **Settings > Devices & services > Q2 OSC Bridge**, select **Configure** on
+an endpoint, and choose **Add entity mapping**. Reopen Configure for each
+additional mapping.
+
+Every mapping has an entity type and name plus an optional send address and
+receive address. At least one address is required. Receive mappings use the
+first OSC argument as the entity state.
+
+- `number` sends and receives numeric values and supports minimum, maximum, and
+  step settings.
+- `switch` sends `1` for on and `0` for off; received booleans, numbers, and
+  common boolean strings update its state.
+- `button` sends a message with no arguments and requires a send address.
+- `sensor` exposes the first argument received at its receive address.
+- `binary_sensor` converts the first received argument to an on/off state.
+- `select` sends and receives option strings and requires comma-separated
+  options.
+
+Changes reload the endpoint automatically. The Configure menu also provides
+**Remove entity mapping** when at least one mapping exists.
+
 ## Receive events
 
 Incoming OSC messages produce a Home Assistant event named
@@ -110,22 +133,6 @@ redacted where appropriate, plus counters for:
 - Last source
 - Last message time
 
-## Entity mapping roadmap
-
-Initial platform files are present for:
-
-- `number`
-- `switch`
-- `button`
-- `sensor`
-- `binary_sensor`
-- `select`
-
-The current entities are lightweight mapping placeholders. The intended next
-step is to add config-entry options for mapping OSC addresses to Home Assistant
-entities, including send templates, receive address filters, value transforms,
-availability rules, and restore behavior.
-
 ## Development
 
 Install test dependencies and run:
@@ -136,9 +143,10 @@ python -m pytest
 
 Roadmap:
 
-- Add options flow for editing endpoint settings after setup.
-- Add full entity mapping storage and validation.
+- Add editing for existing entity mappings.
+- Add endpoint network settings to the options flow.
 - Add import/export for mapping presets.
+- Add value transforms, availability rules, and restore behavior.
 - Add richer OSC bundle handling and timestamp preservation.
 - Add repair flows for unavailable bind ports.
 - Expand Home Assistant integration tests with `pytest-homeassistant-custom-component`.

@@ -10,7 +10,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .endpoint import Q2OscEndpoint
 from .entity_base import Q2OscMappingEntity
-from .entity_mapping import default_mappings
+from .entity_mapping import mappings_from_entry
+from .switch import _as_bool
 
 
 async def async_setup_entry(
@@ -18,16 +19,16 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up placeholder binary sensor mappings."""
+    """Set up binary sensor mappings."""
     endpoint: Q2OscEndpoint = hass.data[DOMAIN][entry.entry_id]
-    mappings = [m for m in default_mappings(endpoint.name) if m.platform == "binary_sensor"]
+    mappings = [m for m in mappings_from_entry(entry) if m.platform == "binary_sensor"]
     async_add_entities(Q2OscBinarySensor(endpoint, mapping) for mapping in mappings)
 
 
 class Q2OscBinarySensor(Q2OscMappingEntity, BinarySensorEntity):
-    """Placeholder binary sensor for future receive mappings."""
+    """Binary sensor updated by incoming OSC messages."""
 
-    @property
-    def is_on(self) -> bool:
-        """Return whether this endpoint has received at least one message."""
-        return self.endpoint.diagnostics.received_messages > 0
+    _attr_is_on = False
+
+    def _apply_received_value(self, value: object) -> None:
+        self._attr_is_on = _as_bool(value)

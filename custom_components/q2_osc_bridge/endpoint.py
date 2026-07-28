@@ -81,6 +81,7 @@ class Q2OscEndpoint:
         self.diagnostics = EndpointDiagnostics()
         self._transport: asyncio.DatagramTransport | None = None
         self._event_callback = event_callback
+        self._message_listeners: set[Callable[[dict[str, Any]], None]] = set()
 
     @property
     def entry_id(self) -> str:
@@ -107,6 +108,14 @@ class Q2OscEndpoint:
             self._transport.close()
             self._transport = None
 
+    def add_message_listener(
+        self,
+        listener: Callable[[dict[str, Any]], None],
+    ) -> Callable[[], None]:
+        """Subscribe to decoded OSC messages."""
+        self._message_listeners.add(listener)
+        return lambda: self._message_listeners.discard(listener)
+
     async def async_send(self, address: str, arguments: Any = None) -> None:
         """Encode and send an OSC message through this endpoint's transport."""
         if self._transport is None:
@@ -128,7 +137,10 @@ class Q2OscEndpoint:
         source_ip, source_port = addr
         if not self.config.receive_enabled:
             return
-        if self.config.allowed_source_ips and source_ip not in self.config.allowed_source_ips:
+        if (
+            self.config.allowed_source_ips
+            and source_ip not in self.config.allowed_source_ips
+        ):
             return
 
         try:
@@ -157,6 +169,8 @@ class Q2OscEndpoint:
             }
             self.diagnostics.received_messages += 1
             self._fire_event(event_data)
+            for listener in tuple(self._message_listeners):
+                listener(event_data)
 
     def _fire_event(self, event_data: dict[str, Any]) -> None:
         """Fire an event through Home Assistant or the injected test callback."""
