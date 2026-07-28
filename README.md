@@ -1,42 +1,48 @@
 # Q2 OSC Bridge
 
+![Q2 OSC Bridge logo](brand/logo.png)
+
 Q2 OSC Bridge is a Home Assistant custom integration for sending and receiving
-Open Sound Control (OSC) messages directly inside Home Assistant Core. It is
-designed for HAOS and HACS distribution, and it runs as a normal custom
-integration rather than as a Home Assistant add-on or external service.
+Open Sound Control (OSC) directly inside Home Assistant Core. It is built for
+HAOS and HACS distribution, and it runs as a normal custom integration rather
+than as an add-on, daemon, or external service.
 
-## Status
-
-This is an initial working integration. It includes endpoint setup, asyncio UDP
-transport ownership, OSC send/receive handling through `python-osc`, Home
-Assistant event emission, diagnostics counters, HACS metadata, and configurable
-OSC entity mappings.
+The current release provides real OSC sending, incoming feedback, Home Assistant
+events, diagnostics, and working entity mappings for buttons, float controls,
+and sensor monitors.
 
 ## Installation
 
-### HACS custom repository
+### HACS Custom Repository
 
-1. In HACS, add this repository as a custom repository.
-2. Choose category `Integration`.
-3. Install **Q2 OSC Bridge**.
-4. Restart Home Assistant.
-5. Add the integration from **Settings > Devices & services**.
+1. In HACS, open **Custom repositories**.
+2. Add `https://github.com/Q-Squared-Systems/q2-osc-bridge`.
+3. Choose category `Integration`.
+4. Install **Q2 OSC Bridge**.
+5. Restart Home Assistant.
+6. Add **Q2 OSC Bridge** from **Settings > Devices & services**.
 
-### Manual install
+### Manual Install
 
 Copy `custom_components/q2_osc_bridge` into your Home Assistant
 `custom_components` directory, then restart Home Assistant.
 
-## HAOS compatibility
+## HAOS Compatibility
 
-Q2 OSC Bridge runs inside Home Assistant Core on HAOS. It does not require a
-separate container, supervisor add-on, daemon, or host-level service. UDP ports
-must be reachable from the HAOS network environment, and any firewall or VLAN
-rules between Home Assistant and OSC devices must allow the configured ports.
+Q2 OSC Bridge runs inside Home Assistant Core on HAOS. UDP ports must be
+reachable from the HAOS network environment, and any firewall, VLAN, VM, or
+router rules between Home Assistant and OSC devices must allow the configured
+ports.
 
-## Endpoint options
+For most HAOS and VM installs, the local bind address should be `0.0.0.0` so the
+integration can listen on all Home Assistant network interfaces.
 
-Each configured OSC endpoint supports:
+## OSC Targets
+
+Each configured target represents one remote OSC app/device and one local UDP
+receive socket.
+
+Target setup fields:
 
 - Name
 - Remote host
@@ -46,9 +52,9 @@ Each configured OSC endpoint supports:
 - Local UDP receive port
 - Optional allowed source IPs
 
-The integration prefers one bound UDP transport per endpoint. That transport is
-used to receive OSC datagrams and to send OSC datagrams to the endpoint's
-configured remote host and port.
+The integration owns one asyncio UDP datagram transport per target. That
+transport sends to the configured remote host/port and receives on the local
+bind address/port.
 
 ## Sending OSC
 
@@ -57,10 +63,9 @@ The integration registers the action:
 ```yaml
 action: q2_osc_bridge.send
 data:
-  endpoint: "Stage Rack"
-  address: "/q2/lift/1/target"
+  endpoint: "MadMapper"
+  address: "/layer/1/visible"
   arguments:
-    - 42
     - true
 ```
 
@@ -70,57 +75,76 @@ You can also target a specific config entry:
 action: q2_osc_bridge.send
 data:
   config_entry_id: "01J..."
-  address: "/q2/lift/1/enable"
+  address: "/layer/1/opacity"
   arguments:
-    - true
+    - 0.75
 ```
 
-Arguments may be a single scalar value, a list of values, or omitted.
+Arguments may be omitted, a single scalar value, or a list of OSC-compatible
+values.
 
-## Entity mappings
+## Entity Mappings
 
 Open **Settings > Devices & services > Q2 OSC Bridge**, select **Configure** on
-an endpoint, then choose one mapping action. Reopen Configure for each
-additional mapping.
+a target, then choose a mapping action. Reopen Configure for each additional
+mapping.
 
-**Add button control** creates a Home Assistant `button` entity. Give it a
-button name and a target path such as `/layer/1/visible`; pressing the entity
-sends that OSC message with no arguments.
+Q2 OSC Bridge uses the UI word `path` for slash-prefixed OSC routes such as
+`/layer/1/opacity`. OSC formally calls these addresses or address patterns.
 
-**Add float control** creates a Home Assistant `number` entity. Give it a
-control name, target path, optional source path, minimum, maximum, and step.
-Changing the number sends the new float value as the first OSC argument to the
-target path. If a source path is set, incoming OSC feedback at that path updates
-the number entity directly.
+### Button Control
 
-**Add sensor monitor** creates a Home Assistant `sensor` entity. Give it a
-sensor name and a source path such as `/layer/1/opacity`; when the endpoint
-receives an OSC message at that path, the sensor state updates to the first OSC
-argument.
+**Add button control** creates a Home Assistant `button` entity.
 
-OSC formally calls these addresses or address patterns, but Q2 OSC Bridge labels
-them as paths in the UI because that is how slash-prefixed OSC controls are
-usually read.
+Fields:
 
-The integration internals already have scaffolding for richer mapping types:
+- Button name
+- Target path
 
-- `number` sends and receives numeric values and supports minimum, maximum, and
-  step settings.
-- `switch` sends `1` for on and `0` for off; received booleans, numbers, and
-  common boolean strings update its state.
-- `button` sends a message with no arguments and requires a target path.
-- `sensor` exposes the first argument received at its source path.
-- `binary_sensor` converts the first received argument to an on/off state.
-- `select` sends and receives option strings and requires comma-separated
-  options.
+Pressing the button sends one OSC message with no arguments to the target path.
 
-Changes reload the endpoint automatically. The Configure menu also provides
-**Remove entity mapping** when at least one mapping exists.
+### Float Control
 
-## Receive events
+**Add float control** creates a Home Assistant `number` entity.
 
-Incoming OSC messages produce a Home Assistant event named
-`q2_osc_bridge_message`.
+Fields:
+
+- Control name
+- Target path
+- Optional source path
+- Minimum
+- Maximum
+- Step
+
+Changing the Home Assistant number sends the new float value as the first OSC
+argument to the target path. If a source path is set, incoming OSC feedback at
+that path updates the number entity directly.
+
+Example:
+
+- Target path: `/layer/1/opacity`
+- Source path: `/layer/1/opacity/feedback`
+- Minimum: `0`
+- Maximum: `1`
+- Step: `0.01`
+
+### Sensor Monitor
+
+**Add sensor monitor** creates a Home Assistant `sensor` entity.
+
+Fields:
+
+- Sensor name
+- Source path
+
+When the target receives an OSC message at the source path, the sensor state
+updates to the first OSC argument.
+
+## Receive Events
+
+Incoming OSC messages also produce a Home Assistant event named
+`q2_osc_bridge_message`. This is useful for debugging and for advanced
+automations that do not need a mapped entity.
 
 Example event data:
 
@@ -128,20 +152,23 @@ Example event data:
 {
   "endpoint_id": "01J...",
   "entry_id": "01J...",
-  "endpoint_name": "Stage Rack",
+  "endpoint_name": "MadMapper",
   "source_ip": "192.168.1.50",
   "source_port": 9001,
-  "address": "/q2/lift/1/position",
-  "arguments": [12.5],
+  "address": "/layer/1/opacity/feedback",
+  "arguments": [0.176922976970673],
   "type_tags": "f",
   "timestamp": "2026-07-27T19:30:00.000000+00:00"
 }
 ```
 
+To listen in Home Assistant, go to **Developer Tools > Events** and subscribe to
+`q2_osc_bridge_message`.
+
 ## Diagnostics
 
-The diagnostics payload includes endpoint configuration with sensitive values
-redacted where appropriate, plus counters for:
+Diagnostics include target configuration with sensitive values redacted where
+appropriate, plus runtime counters for:
 
 - Received messages
 - Sent messages
@@ -150,17 +177,38 @@ redacted where appropriate, plus counters for:
 - Last source
 - Last message time
 
+## Current Limitations
+
+- Mapping setup supports add/remove, but not editing existing mappings yet.
+- Receive mappings use exact OSC path matches.
+- Entity mappings currently use the first OSC argument only.
+- Button controls send no arguments.
+- Float feedback values are accepted as raw floats; display rounding/clamping is
+  planned.
+- Switch, binary sensor, and select platforms have scaffolding but are not yet
+  exposed in the Configure UI.
+
 ## Development
 
 Install test dependencies and run:
 
 ```bash
-python -m pytest
+PYTHONPATH=. python -m pytest
+```
+
+Additional checks used for releases:
+
+```bash
+ruff check .
+ruff format --check .
+python -m compileall custom_components/q2_osc_bridge
 ```
 
 Roadmap:
 
 - Add editing for existing entity mappings.
+- Add float feedback rounding and min/max clamping.
+- Add switch, binary sensor, and select mapping flows.
 - Add endpoint network settings to the options flow.
 - Add import/export for mapping presets.
 - Add value transforms, availability rules, and restore behavior.
