@@ -8,6 +8,7 @@ from custom_components.q2_osc_bridge.const import CONF_MAPPINGS
 from custom_components.q2_osc_bridge.entity_mapping import (
     OscEntityMapping,
     create_button_mapping,
+    create_number_mapping,
     create_sensor_mapping,
     mappings_from_entry,
 )
@@ -45,6 +46,35 @@ def test_options_flow_creates_button_mapping_from_target_path() -> None:
 def test_button_mapping_requires_target_path() -> None:
     with pytest.raises(ValueError):
         create_button_mapping("Channel On", "channel/1/on")
+
+
+def test_options_flow_creates_number_mapping_from_target_and_source_paths() -> None:
+    mapping = create_number_mapping(
+        "Opacity",
+        "/layer/1/opacity",
+        "/layer/1/opacity/feedback",
+        min_value=0,
+        max_value=1,
+        step=0.01,
+    )
+
+    assert mapping.platform == "number"
+    assert mapping.name == "Opacity"
+    assert mapping.send_address == "/layer/1/opacity"
+    assert mapping.receive_address == "/layer/1/opacity/feedback"
+    assert mapping.min_value == 0
+    assert mapping.max_value == 1
+    assert mapping.step == 0.01
+
+
+def test_number_mapping_rejects_invalid_range() -> None:
+    with pytest.raises(ValueError):
+        create_number_mapping("Opacity", "/layer/1/opacity", min_value=1, max_value=1)
+
+
+def test_number_mapping_requires_target_path() -> None:
+    with pytest.raises(ValueError):
+        create_number_mapping("Opacity", "layer/1/opacity")
 
 
 def test_options_flow_creates_sensor_mapping_from_source_path() -> None:

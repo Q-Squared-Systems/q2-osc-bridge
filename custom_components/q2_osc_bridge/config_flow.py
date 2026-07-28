@@ -14,12 +14,15 @@ from .const import (
     CONF_LOCAL_BIND_ADDRESS,
     CONF_LOCAL_PORT,
     CONF_MAPPINGS,
+    CONF_MAX_VALUE,
+    CONF_MIN_VALUE,
     CONF_NAME,
     CONF_RECEIVE_ADDRESS,
     CONF_RECEIVE_ENABLED,
     CONF_REMOTE_HOST,
     CONF_REMOTE_PORT,
     CONF_SEND_ADDRESS,
+    CONF_STEP,
     DEFAULT_BIND_ADDRESS,
     DEFAULT_RECEIVE_ENABLED,
     DOMAIN,
@@ -27,6 +30,7 @@ from .const import (
 from .entity_mapping import (
     OscEntityMapping,
     create_button_mapping,
+    create_number_mapping,
     create_sensor_mapping,
 )
 from .validators import PORT_SCHEMA, normalize_allowed_source_ips, validate_port
@@ -114,7 +118,7 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Show mapping management actions."""
-        menu_options = ["add_mapping", "add_sensor_mapping"]
+        menu_options = ["add_mapping", "add_number_mapping", "add_sensor_mapping"]
         if self.config_entry.options.get(CONF_MAPPINGS):
             menu_options.append("remove_mapping")
         return self.async_show_menu(step_id="init", menu_options=menu_options)
@@ -137,6 +141,27 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="add_mapping",
             data_schema=_button_mapping_schema(user_input),
+            errors=errors,
+        )
+
+    async def async_step_add_number_mapping(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Add one float number entity mapping."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                mapping = _number_mapping_from_user_input(user_input)
+            except (ValueError, vol.Invalid):
+                errors["base"] = "invalid_mapping"
+            else:
+                mappings = list(self.config_entry.options.get(CONF_MAPPINGS, []))
+                return self._async_create_mapping_entry(mappings, mapping)
+
+        return self.async_show_form(
+            step_id="add_number_mapping",
+            data_schema=_number_mapping_schema(user_input),
             errors=errors,
         )
 
@@ -227,11 +252,53 @@ def _sensor_mapping_schema(defaults: dict[str, Any] | None = None) -> vol.Schema
     )
 
 
+def _number_mapping_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
+    """Return the float number entity mapping form."""
+    defaults = defaults or {}
+    return vol.Schema(
+        {
+            vol.Required(CONF_NAME, default=defaults.get(CONF_NAME, "")): str,
+            vol.Required(
+                CONF_SEND_ADDRESS,
+                default=defaults.get(CONF_SEND_ADDRESS, ""),
+            ): str,
+            vol.Optional(
+                CONF_RECEIVE_ADDRESS,
+                default=defaults.get(CONF_RECEIVE_ADDRESS, ""),
+            ): str,
+            vol.Optional(
+                CONF_MIN_VALUE,
+                default=defaults.get(CONF_MIN_VALUE, 0),
+            ): vol.Coerce(float),
+            vol.Optional(
+                CONF_MAX_VALUE,
+                default=defaults.get(CONF_MAX_VALUE, 100),
+            ): vol.Coerce(float),
+            vol.Optional(
+                CONF_STEP,
+                default=defaults.get(CONF_STEP, 1),
+            ): vol.All(vol.Coerce(float), vol.Range(min=0.000001)),
+        }
+    )
+
+
 def _mapping_from_user_input(user_input: dict[str, Any]) -> OscEntityMapping:
     """Validate and normalize a mapping form submission."""
     return create_button_mapping(
         name=str(user_input[CONF_NAME]),
         target_path=str(user_input.get(CONF_SEND_ADDRESS, "")),
+    )
+
+
+def _number_mapping_from_user_input(user_input: dict[str, Any]) -> OscEntityMapping:
+    """Validate and normalize a float number mapping form submission."""
+    return create_number_mapping(
+        name=str(user_input[CONF_NAME]),
+        target_path=str(user_input.get(CONF_SEND_ADDRESS, "")),
+        source_path=str(user_input.get(CONF_RECEIVE_ADDRESS, "")),
+        min_value=float(user_input.get(CONF_MIN_VALUE, 0)),
+        max_value=float(user_input.get(CONF_MAX_VALUE, 100)),
+        step=float(user_input.get(CONF_STEP, 1)),
     )
 
 

@@ -87,6 +87,12 @@ additional mapping.
 button name and a target path such as `/layer/1/visible`; pressing the entity
 sends that OSC message with no arguments.
 
+**Add float control** creates a Home Assistant `number` entity. Give it a
+control name, target path, optional source path, minimum, maximum, and step.
+Changing the number sends the new float value as the first OSC argument to the
+target path. If a source path is set, incoming OSC feedback at that path updates
+the number entity directly.
+
 **Add sensor monitor** creates a Home Assistant `sensor` entity. Give it a
 sensor name and a source path such as `/layer/1/opacity`; when the endpoint
 receives an OSC message at that path, the sensor state updates to the first OSC

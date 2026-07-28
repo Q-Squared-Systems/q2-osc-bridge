@@ -27,6 +27,7 @@
       "init": {
         "menu_options": {
           "add_mapping": "Add button control",
+          "add_number_mapping": "Add float control",
           "add_sensor_mapping": "Add sensor monitor",
           "remove_mapping": "Remove entity mapping"
         }
@@ -37,6 +38,18 @@
         "data": {
           "name": "Button name",
           "send_address": "Target path"
+        }
+      },
+      "add_number_mapping": {
+        "title": "Add OSC float control",
+        "description": "Create a Home Assistant number entity that sends float values and can optionally follow incoming feedback.",
+        "data": {
+          "name": "Control name",
+          "send_address": "Target path",
+          "receive_address": "Source path",
+          "min_value": "Minimum",
+          "max_value": "Maximum",
+          "step": "Step"
         }
       },
       "add_sensor_mapping": {

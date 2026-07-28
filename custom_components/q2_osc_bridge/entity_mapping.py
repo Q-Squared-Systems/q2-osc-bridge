@@ -91,3 +91,41 @@ def create_sensor_mapping(name: str, source_path: str) -> OscEntityMapping:
         name=name,
         receive_address=source_path,
     )
+
+
+def create_number_mapping(
+    name: str,
+    target_path: str,
+    source_path: str | None = None,
+    min_value: float = 0,
+    max_value: float = 100,
+    step: float = 1,
+) -> OscEntityMapping:
+    """Create a float number mapping from user-facing fields."""
+    name = name.strip()
+    target_path = target_path.strip()
+    source_path = source_path.strip() if source_path else None
+
+    if not name:
+        raise ValueError("float control name is required")
+    if not target_path:
+        raise ValueError("target path is required")
+    if not target_path.startswith("/"):
+        raise ValueError("target path must start with /")
+    if source_path and not source_path.startswith("/"):
+        raise ValueError("source path must start with /")
+    if min_value >= max_value:
+        raise ValueError("minimum must be less than maximum")
+    if step <= 0:
+        raise ValueError("step must be positive")
+
+    return OscEntityMapping(
+        platform="number",
+        key=uuid4().hex,
+        name=name,
+        send_address=target_path,
+        receive_address=source_path,
+        min_value=min_value,
+        max_value=max_value,
+        step=step,
+    )
