@@ -71,3 +71,23 @@ def create_button_mapping(name: str, target_path: str) -> OscEntityMapping:
         name=name,
         send_address=target_path,
     )
+
+
+def create_sensor_mapping(name: str, source_path: str) -> OscEntityMapping:
+    """Create a sensor mapping from user-facing fields."""
+    name = name.strip()
+    source_path = source_path.strip()
+
+    if not name:
+        raise ValueError("sensor name is required")
+    if not source_path:
+        raise ValueError("source path is required")
+    if not source_path.startswith("/"):
+        raise ValueError("source path must start with /")
+
+    return OscEntityMapping(
+        platform="sensor",
+        key=uuid4().hex,
+        name=name,
+        receive_address=source_path,
+    )

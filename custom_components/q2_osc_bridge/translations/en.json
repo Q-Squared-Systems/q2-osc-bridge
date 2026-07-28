@@ -27,6 +27,7 @@
       "init": {
         "menu_options": {
           "add_mapping": "Add button control",
+          "add_sensor_mapping": "Add sensor monitor",
           "remove_mapping": "Remove entity mapping"
         }
       },
@@ -36,6 +37,14 @@
         "data": {
           "name": "Button name",
           "send_address": "Target path"
+        }
+      },
+      "add_sensor_mapping": {
+        "title": "Add OSC sensor monitor",
+        "description": "Create a Home Assistant sensor that updates from one incoming OSC message path.",
+        "data": {
+          "name": "Sensor name",
+          "receive_address": "Source path"
         }
       },
       "remove_mapping": {

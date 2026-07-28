@@ -80,14 +80,21 @@ Arguments may be a single scalar value, a list of values, or omitted.
 ## Entity mappings
 
 Open **Settings > Devices & services > Q2 OSC Bridge**, select **Configure** on
-an endpoint, and choose **Add button control**. Reopen Configure for each
+an endpoint, then choose one mapping action. Reopen Configure for each
 additional mapping.
 
-The first supported mapping is a Home Assistant `button` entity. Give it a
+**Add button control** creates a Home Assistant `button` entity. Give it a
 button name and a target path such as `/layer/1/visible`; pressing the entity
-sends that OSC message with no arguments. OSC formally calls this an address or
-address pattern, but Q2 OSC Bridge labels it as a path in the UI because that is
-how these slash-prefixed controls are usually read.
+sends that OSC message with no arguments.
+
+**Add sensor monitor** creates a Home Assistant `sensor` entity. Give it a
+sensor name and a source path such as `/layer/1/opacity`; when the endpoint
+receives an OSC message at that path, the sensor state updates to the first OSC
+argument.
+
+OSC formally calls these addresses or address patterns, but Q2 OSC Bridge labels
+them as paths in the UI because that is how slash-prefixed OSC controls are
+usually read.
 
 The integration internals already have scaffolding for richer mapping types:
 
@@ -95,8 +102,8 @@ The integration internals already have scaffolding for richer mapping types:
   step settings.
 - `switch` sends `1` for on and `0` for off; received booleans, numbers, and
   common boolean strings update its state.
-- `button` sends a message with no arguments and requires a send address.
-- `sensor` exposes the first argument received at its receive address.
+- `button` sends a message with no arguments and requires a target path.
+- `sensor` exposes the first argument received at its source path.
 - `binary_sensor` converts the first received argument to an on/off state.
 - `select` sends and receives option strings and requires comma-separated
   options.

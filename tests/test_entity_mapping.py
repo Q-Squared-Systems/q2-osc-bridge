@@ -8,6 +8,7 @@ from custom_components.q2_osc_bridge.const import CONF_MAPPINGS
 from custom_components.q2_osc_bridge.entity_mapping import (
     OscEntityMapping,
     create_button_mapping,
+    create_sensor_mapping,
     mappings_from_entry,
 )
 
@@ -44,3 +45,17 @@ def test_options_flow_creates_button_mapping_from_target_path() -> None:
 def test_button_mapping_requires_target_path() -> None:
     with pytest.raises(ValueError):
         create_button_mapping("Channel On", "channel/1/on")
+
+
+def test_options_flow_creates_sensor_mapping_from_source_path() -> None:
+    mapping = create_sensor_mapping("Layer Opacity", "/layer/1/opacity")
+
+    assert mapping.platform == "sensor"
+    assert mapping.name == "Layer Opacity"
+    assert mapping.receive_address == "/layer/1/opacity"
+    assert mapping.send_address is None
+
+
+def test_sensor_mapping_requires_source_path() -> None:
+    with pytest.raises(ValueError):
+        create_sensor_mapping("Layer Opacity", "layer/1/opacity")

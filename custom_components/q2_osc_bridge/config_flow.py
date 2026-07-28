@@ -15,6 +15,7 @@ from .const import (
     CONF_LOCAL_PORT,
     CONF_MAPPINGS,
     CONF_NAME,
+    CONF_RECEIVE_ADDRESS,
     CONF_RECEIVE_ENABLED,
     CONF_REMOTE_HOST,
     CONF_REMOTE_PORT,
@@ -23,7 +24,11 @@ from .const import (
     DEFAULT_RECEIVE_ENABLED,
     DOMAIN,
 )
-from .entity_mapping import OscEntityMapping, create_button_mapping
+from .entity_mapping import (
+    OscEntityMapping,
+    create_button_mapping,
+    create_sensor_mapping,
+)
 from .validators import PORT_SCHEMA, normalize_allowed_source_ips, validate_port
 
 
@@ -109,7 +114,7 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Show mapping management actions."""
-        menu_options = ["add_mapping"]
+        menu_options = ["add_mapping", "add_sensor_mapping"]
         if self.config_entry.options.get(CONF_MAPPINGS):
             menu_options.append("remove_mapping")
         return self.async_show_menu(step_id="init", menu_options=menu_options)
@@ -127,15 +132,32 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
                 errors["base"] = "invalid_mapping"
             else:
                 mappings = list(self.config_entry.options.get(CONF_MAPPINGS, []))
-                mappings.append(mapping.as_dict())
-                return self.async_create_entry(
-                    title="",
-                    data={**self.config_entry.options, CONF_MAPPINGS: mappings},
-                )
+                return self._async_create_mapping_entry(mappings, mapping)
 
         return self.async_show_form(
             step_id="add_mapping",
-            data_schema=_mapping_schema(user_input),
+            data_schema=_button_mapping_schema(user_input),
+            errors=errors,
+        )
+
+    async def async_step_add_sensor_mapping(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Add one sensor entity mapping."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                mapping = _sensor_mapping_from_user_input(user_input)
+            except (ValueError, vol.Invalid):
+                errors["base"] = "invalid_mapping"
+            else:
+                mappings = list(self.config_entry.options.get(CONF_MAPPINGS, []))
+                return self._async_create_mapping_entry(mappings, mapping)
+
+        return self.async_show_form(
+            step_id="add_sensor_mapping",
+            data_schema=_sensor_mapping_schema(user_input),
             errors=errors,
         )
 
@@ -164,8 +186,20 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema({vol.Required("mapping"): vol.In(labels)}),
         )
 
+    def _async_create_mapping_entry(
+        self,
+        mappings: list[dict[str, Any]],
+        mapping: OscEntityMapping,
+    ) -> FlowResult:
+        """Append a mapping and finish the options flow."""
+        mappings.append(mapping.as_dict())
+        return self.async_create_entry(
+            title="",
+            data={**self.config_entry.options, CONF_MAPPINGS: mappings},
+        )
 
-def _mapping_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
+
+def _button_mapping_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     """Return the button entity mapping form."""
     defaults = defaults or {}
     return vol.Schema(
@@ -179,11 +213,33 @@ def _mapping_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     )
 
 
+def _sensor_mapping_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
+    """Return the sensor entity mapping form."""
+    defaults = defaults or {}
+    return vol.Schema(
+        {
+            vol.Required(CONF_NAME, default=defaults.get(CONF_NAME, "")): str,
+            vol.Required(
+                CONF_RECEIVE_ADDRESS,
+                default=defaults.get(CONF_RECEIVE_ADDRESS, ""),
+            ): str,
+        }
+    )
+
+
 def _mapping_from_user_input(user_input: dict[str, Any]) -> OscEntityMapping:
     """Validate and normalize a mapping form submission."""
     return create_button_mapping(
         name=str(user_input[CONF_NAME]),
         target_path=str(user_input.get(CONF_SEND_ADDRESS, "")),
+    )
+
+
+def _sensor_mapping_from_user_input(user_input: dict[str, Any]) -> OscEntityMapping:
+    """Validate and normalize a sensor mapping form submission."""
+    return create_sensor_mapping(
+        name=str(user_input[CONF_NAME]),
+        source_path=str(user_input.get(CONF_RECEIVE_ADDRESS, "")),
     )
 
 
