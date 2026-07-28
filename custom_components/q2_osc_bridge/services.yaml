@@ -1,0 +1,21 @@
+send:
+  fields:
+    config_entry_id:
+      example: "01J..."
+      selector:
+        text:
+    endpoint:
+      example: "Stage Rack"
+      selector:
+        text:
+    address:
+      required: true
+      example: "/q2/lift/1/target"
+      selector:
+        text:
+    arguments:
+      example:
+        - 42
+        - true
+      selector:
+        object:

@@ -1,0 +1,25 @@
+{
+  "title": "Q2 OSC Bridge",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Create OSC endpoint",
+        "data": {
+          "name": "Name",
+          "remote_host": "Remote host",
+          "remote_port": "Remote port",
+          "receive_enabled": "Receive enabled",
+          "local_bind_address": "Local bind address",
+          "local_port": "Local UDP receive port",
+          "allowed_source_ips": "Allowed source IPs"
+        }
+      }
+    },
+    "error": {
+      "invalid_config": "Endpoint settings are invalid."
+    },
+    "abort": {
+      "already_configured": "This local bind address and port are already configured."
+    }
+  }
+}

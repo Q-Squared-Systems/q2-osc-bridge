@@ -1,0 +1,13 @@
+{
+  "domain": "q2_osc_bridge",
+  "name": "Q2 OSC Bridge",
+  "codeowners": ["@q-squared"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/Q-Squared-Systems/q2-osc-bridge",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/Q-Squared-Systems/q2-osc-bridge/issues",
+  "requirements": ["python-osc>=1.8.3"],
+  "version": "0.1.0"
+}

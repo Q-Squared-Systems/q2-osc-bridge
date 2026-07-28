@@ -1,0 +1,89 @@
+from __future__ import annotations
+
+from typing import Any
+
+from custom_components.q2_osc_bridge.const import EVENT_OSC_MESSAGE
+from custom_components.q2_osc_bridge.endpoint import (
+    EndpointConfig,
+    Q2OscEndpoint,
+    build_osc_message,
+    infer_type_tags,
+)
+
+
+def _endpoint_config(**overrides: Any) -> EndpointConfig:
+    values = {
+        "entry_id": "entry-1",
+        "name": "Stage Rack",
+        "remote_host": "127.0.0.1",
+        "remote_port": 9000,
+        "receive_enabled": True,
+        "local_bind_address": "127.0.0.1",
+        "local_port": 9001,
+        "allowed_source_ips": [],
+    }
+    values.update(overrides)
+    return EndpointConfig(**values)
+
+
+def test_infer_type_tags() -> None:
+    assert infer_type_tags([1, 2.5, "go", True, False, None]) == "ifsTFN"
+
+
+def test_endpoint_emits_event_for_incoming_osc_message() -> None:
+    events: list[tuple[str, dict[str, Any]]] = []
+    endpoint = Q2OscEndpoint(
+        hass=None,
+        config=_endpoint_config(),
+        event_callback=lambda event_type, event_data: events.append(
+            (event_type, event_data)
+        ),
+    )
+
+    endpoint.handle_datagram(
+        build_osc_message("/q2/lift/1/position", [12.5, "ready"]),
+        ("192.168.1.50", 53000),
+    )
+
+    assert len(events) == 1
+    event_type, data = events[0]
+    assert event_type == EVENT_OSC_MESSAGE
+    assert data["endpoint_id"] == "entry-1"
+    assert data["entry_id"] == "entry-1"
+    assert data["endpoint_name"] == "Stage Rack"
+    assert data["source_ip"] == "192.168.1.50"
+    assert data["source_port"] == 53000
+    assert data["address"] == "/q2/lift/1/position"
+    assert data["arguments"] == [12.5, "ready"]
+    assert data["type_tags"] == "fs"
+    assert "timestamp" in data
+    assert endpoint.diagnostics.received_messages == 1
+    assert endpoint.diagnostics.last_source == "192.168.1.50:53000"
+
+
+def test_endpoint_ignores_disallowed_source_ip() -> None:
+    events: list[tuple[str, dict[str, Any]]] = []
+    endpoint = Q2OscEndpoint(
+        hass=None,
+        config=_endpoint_config(allowed_source_ips=["10.0.0.1"]),
+        event_callback=lambda event_type, event_data: events.append(
+            (event_type, event_data)
+        ),
+    )
+
+    endpoint.handle_datagram(build_osc_message("/q2/test", [1]), ("10.0.0.2", 53000))
+
+    assert events == []
+    assert endpoint.diagnostics.received_messages == 0
+
+
+def test_endpoint_counts_decode_errors() -> None:
+    endpoint = Q2OscEndpoint(
+        hass=None,
+        config=_endpoint_config(),
+        event_callback=lambda event_type, event_data: None,
+    )
+
+    endpoint.handle_datagram(b"not osc", ("127.0.0.1", 53000))
+
+    assert endpoint.diagnostics.decode_errors == 1
