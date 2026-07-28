@@ -26,22 +26,16 @@
     "step": {
       "init": {
         "menu_options": {
-          "add_mapping": "Add entity mapping",
+          "add_mapping": "Add button control",
           "remove_mapping": "Remove entity mapping"
         }
       },
       "add_mapping": {
-        "title": "Add OSC entity mapping",
-        "description": "Create an entity that sends and/or receives one OSC address.",
+        "title": "Add OSC button control",
+        "description": "Create a Home Assistant button that sends one OSC message to the configured target.",
         "data": {
-          "platform": "Entity type",
-          "name": "Entity name",
-          "send_address": "OSC send address",
-          "receive_address": "OSC receive address",
-          "options": "Select options (comma-separated)",
-          "min_value": "Number minimum",
-          "max_value": "Number maximum",
-          "step": "Number step"
+          "name": "Button name",
+          "send_address": "Target path"
         }
       },
       "remove_mapping": {

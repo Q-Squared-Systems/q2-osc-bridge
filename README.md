@@ -80,12 +80,16 @@ Arguments may be a single scalar value, a list of values, or omitted.
 ## Entity mappings
 
 Open **Settings > Devices & services > Q2 OSC Bridge**, select **Configure** on
-an endpoint, and choose **Add entity mapping**. Reopen Configure for each
+an endpoint, and choose **Add button control**. Reopen Configure for each
 additional mapping.
 
-Every mapping has an entity type and name plus an optional send address and
-receive address. At least one address is required. Receive mappings use the
-first OSC argument as the entity state.
+The first supported mapping is a Home Assistant `button` entity. Give it a
+button name and a target path such as `/layer/1/visible`; pressing the entity
+sends that OSC message with no arguments. OSC formally calls this an address or
+address pattern, but Q2 OSC Bridge labels it as a path in the UI because that is
+how these slash-prefixed controls are usually read.
+
+The integration internals already have scaffolding for richer mapping types:
 
 - `number` sends and receives numeric values and supports minimum, maximum, and
   step settings.

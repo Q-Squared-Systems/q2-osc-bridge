@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from typing import Any
+from uuid import uuid4
 
 from .const import CONF_MAPPINGS
 
@@ -50,3 +51,23 @@ def mappings_from_entry(entry: Any) -> list[OscEntityMapping]:
         OscEntityMapping.from_dict(mapping)
         for mapping in entry.options.get(CONF_MAPPINGS, [])
     ]
+
+
+def create_button_mapping(name: str, target_path: str) -> OscEntityMapping:
+    """Create a button mapping from user-facing fields."""
+    name = name.strip()
+    target_path = target_path.strip()
+
+    if not name:
+        raise ValueError("button name is required")
+    if not target_path:
+        raise ValueError("target path is required")
+    if not target_path.startswith("/"):
+        raise ValueError("target path must start with /")
+
+    return OscEntityMapping(
+        platform="button",
+        key=uuid4().hex,
+        name=name,
+        send_address=target_path,
+    )
