@@ -141,6 +141,7 @@ def create_switch_mapping(
     name: str,
     target_path: str,
     source_path: str | None = None,
+    osc_type: str = "T/F",
 ) -> OscEntityMapping:
     """Create a boolean switch mapping from user-facing fields."""
     name = name.strip()
@@ -155,6 +156,8 @@ def create_switch_mapping(
         raise ValueError("target path must start with /")
     if source_path and not source_path.startswith("/"):
         raise ValueError("source path must start with /")
+    if osc_type not in {"T/F", "i:1/0", "i:0/1", "f:1/0", "f:0/1"}:
+        raise ValueError("unsupported switch OSC type")
 
     return OscEntityMapping(
         platform="switch",
@@ -162,7 +165,7 @@ def create_switch_mapping(
         name=name,
         send_address=target_path,
         receive_address=source_path,
-        osc_type="T/F",
+        osc_type=osc_type,
     )
 
 

@@ -14,6 +14,10 @@ from custom_components.q2_osc_bridge.entity_mapping import (
     create_text_mapping,
     mappings_from_entry,
 )
+from custom_components.q2_osc_bridge.x32_presets import (
+    create_x32_input_channel_fader_mappings,
+    create_x32_input_channel_mute_mappings,
+)
 
 
 def test_mapping_round_trip_through_config_entry_options() -> None:
@@ -139,3 +143,32 @@ def test_options_flow_creates_sensor_mapping_from_source_path() -> None:
 def test_sensor_mapping_requires_source_path() -> None:
     with pytest.raises(ValueError):
         create_sensor_mapping("Layer Opacity", "layer/1/opacity")
+
+
+def test_x32_input_channel_mute_preset_creates_inverted_integer_switches() -> None:
+    mappings = create_x32_input_channel_mute_mappings()
+
+    assert len(mappings) == 32
+    assert mappings[0].platform == "switch"
+    assert mappings[0].name == "CH 01 Mute"
+    assert mappings[0].send_address == "/ch/01/mix/on"
+    assert mappings[0].receive_address == "/ch/01/mix/on"
+    assert mappings[0].osc_type == "i:0/1"
+    assert mappings[-1].name == "CH 32 Mute"
+    assert mappings[-1].send_address == "/ch/32/mix/on"
+
+
+def test_x32_input_channel_fader_preset_creates_float_numbers() -> None:
+    mappings = create_x32_input_channel_fader_mappings()
+
+    assert len(mappings) == 32
+    assert mappings[0].platform == "number"
+    assert mappings[0].name == "CH 01 Fader"
+    assert mappings[0].send_address == "/ch/01/mix/fader"
+    assert mappings[0].receive_address == "/ch/01/mix/fader"
+    assert mappings[0].min_value == 0
+    assert mappings[0].max_value == 1
+    assert mappings[0].step == 0.01
+    assert mappings[0].osc_type == "f"
+    assert mappings[-1].name == "CH 32 Fader"
+    assert mappings[-1].send_address == "/ch/32/mix/fader"

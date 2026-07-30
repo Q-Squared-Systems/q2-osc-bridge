@@ -37,6 +37,12 @@ from .entity_mapping import (
 )
 from .target_settings import target_settings_from_entry
 from .validators import PORT_SCHEMA, normalize_allowed_source_ips, validate_port
+from .x32_presets import (
+    create_x32_input_channel_fader_mappings,
+    create_x32_input_channel_mute_mappings,
+)
+
+CONF_CONFIRM = "confirm"
 
 
 class Q2OscBridgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -129,6 +135,8 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
             "add_switch_mapping": "Add boolean control",
             "add_text_mapping": "Add string control",
             "add_sensor_mapping": "Add sensor monitor",
+            "add_x32_input_channel_mutes": "Add X32 input channel mutes",
+            "add_x32_input_channel_faders": "Add X32 input fader levels",
         }
         if self.config_entry.options.get(CONF_MAPPINGS):
             menu_options["remove_mapping"] = "Remove entity mapping"
@@ -284,6 +292,36 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
             errors=errors,
         )
 
+    async def async_step_add_x32_input_channel_mutes(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Add X32 input channel mute mappings."""
+        if user_input is not None and user_input.get(CONF_CONFIRM):
+            return self._async_create_mapping_entries(
+                create_x32_input_channel_mute_mappings()
+            )
+
+        return self.async_show_form(
+            step_id="add_x32_input_channel_mutes",
+            data_schema=_preset_confirm_schema(user_input),
+        )
+
+    async def async_step_add_x32_input_channel_faders(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Add X32 input channel fader mappings."""
+        if user_input is not None and user_input.get(CONF_CONFIRM):
+            return self._async_create_mapping_entries(
+                create_x32_input_channel_fader_mappings()
+            )
+
+        return self.async_show_form(
+            step_id="add_x32_input_channel_faders",
+            data_schema=_preset_confirm_schema(user_input),
+        )
+
     async def async_step_remove_mapping(
         self,
         user_input: dict[str, Any] | None = None,
@@ -316,6 +354,30 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Append a mapping and finish the options flow."""
         mappings.append(mapping.as_dict())
+        return self.async_create_entry(
+            title="",
+            data={**self.config_entry.options, CONF_MAPPINGS: mappings},
+        )
+
+    def _async_create_mapping_entries(
+        self,
+        new_mappings: list[OscEntityMapping],
+    ) -> FlowResult:
+        """Append non-duplicate mappings and finish the options flow."""
+        mappings = list(self.config_entry.options.get(CONF_MAPPINGS, []))
+        existing_paths = {
+            (
+                mapping.get("platform"),
+                mapping.get("send_address"),
+                mapping.get("receive_address"),
+            )
+            for mapping in mappings
+        }
+        for mapping in new_mappings:
+            key = (mapping.platform, mapping.send_address, mapping.receive_address)
+            if key not in existing_paths:
+                mappings.append(mapping.as_dict())
+                existing_paths.add(key)
         return self.async_create_entry(
             title="",
             data={**self.config_entry.options, CONF_MAPPINGS: mappings},
@@ -422,6 +484,19 @@ def _send_receive_mapping_schema(
                 CONF_RECEIVE_ADDRESS,
                 default=defaults.get(CONF_RECEIVE_ADDRESS, ""),
             ): str,
+        }
+    )
+
+
+def _preset_confirm_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
+    """Return a preset confirmation form."""
+    defaults = defaults or {}
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_CONFIRM,
+                default=defaults.get(CONF_CONFIRM, True),
+            ): bool,
         }
     )
 

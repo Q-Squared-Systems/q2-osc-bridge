@@ -192,6 +192,42 @@ Fields:
 When the target receives an OSC message at the source path, the sensor state
 updates to the first OSC argument.
 
+## X32 Presets
+
+Q2 OSC Bridge includes starter presets for Behringer X32/M32 consoles. These
+presets create a useful group of mapped HA entities without importing the entire
+console surface.
+
+### Input Channel Mutes
+
+**Add X32 input channel mutes** creates 32 Home Assistant `switch` entities for:
+
+```text
+/ch/01/mix/on
+...
+/ch/32/mix/on
+```
+
+The X32 path is named `mix/on`, where `1` means the channel is on and `0` means
+the channel is muted. Q2 OSC Bridge exposes these as mute switches, so switch
+on means muted and sends `0`; switch off means unmuted and sends `1`.
+
+### Input Fader Levels
+
+**Add X32 input fader levels** creates 32 Home Assistant `number` entities for:
+
+```text
+/ch/01/mix/fader
+...
+/ch/32/mix/fader
+```
+
+Each fader uses a `0..1` float range with step `0.01`, and uses the same OSC
+path for target and source feedback.
+
+For live X32 feedback, keep `/xremote` active. A Home Assistant automation that
+sends `/xremote` every 8 seconds works well.
+
 ## Receive Events
 
 Incoming OSC messages also produce a Home Assistant event named
@@ -237,6 +273,7 @@ appropriate, plus runtime counters for:
 - Button controls send no arguments.
 - Float feedback values are accepted as raw floats; display rounding/clamping is
   planned.
+- X32 presets currently cover input channel mutes and input fader levels only.
 - Binary sensor and select platforms have scaffolding but are not yet exposed in
   the Configure UI.
 
@@ -260,6 +297,7 @@ Roadmap:
 
 - Add editing for existing entity mappings.
 - Add float feedback rounding and min/max clamping.
+- Add more X32 preset groups.
 - Add binary sensor and select mapping flows.
 - Add import/export for mapping presets.
 - Add value transforms, availability rules, and restore behavior.

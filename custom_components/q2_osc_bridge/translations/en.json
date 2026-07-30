@@ -34,6 +34,8 @@
           "add_switch_mapping": "Add boolean control",
           "add_text_mapping": "Add string control",
           "add_sensor_mapping": "Add sensor monitor",
+          "add_x32_input_channel_mutes": "Add X32 input channel mutes",
+          "add_x32_input_channel_faders": "Add X32 input fader levels",
           "remove_mapping": "Remove entity mapping"
         }
       },
@@ -105,6 +107,20 @@
         "data": {
           "name": "Sensor name",
           "receive_address": "Source path"
+        }
+      },
+      "add_x32_input_channel_mutes": {
+        "title": "Add X32 input channel mutes",
+        "description": "Create 32 Home Assistant mute switches for /ch/01..32/mix/on. Switch on means muted, so Q2 OSC Bridge sends 0 for on and 1 for off.",
+        "data": {
+          "confirm": "Add 32 mute switches"
+        }
+      },
+      "add_x32_input_channel_faders": {
+        "title": "Add X32 input fader levels",
+        "description": "Create 32 Home Assistant float controls for /ch/01..32/mix/fader with 0..1 range and same-path feedback.",
+        "data": {
+          "confirm": "Add 32 fader controls"
         }
       },
       "remove_mapping": {

@@ -11,6 +11,7 @@ from .const import DOMAIN
 from .endpoint import Q2OscEndpoint
 from .entity_base import Q2OscMappingEntity
 from .entity_mapping import mappings_from_entry
+from .switch_encoding import as_bool, osc_switch_value
 
 
 async def async_setup_entry(
@@ -30,24 +31,24 @@ class Q2OscSwitch(Q2OscMappingEntity, SwitchEntity):
     _attr_is_on = False
 
     async def async_turn_on(self, **kwargs: object) -> None:
-        """Turn on and send OSC true."""
+        """Turn on and send the configured OSC true value."""
         self._attr_is_on = True
         if self.mapping.send_address:
-            await self.endpoint.async_send(self.mapping.send_address, [True])
+            await self.endpoint.async_send(
+                self.mapping.send_address,
+                [osc_switch_value(True, self.mapping.osc_type)],
+            )
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: object) -> None:
-        """Turn off and send OSC false."""
+        """Turn off and send the configured OSC false value."""
         self._attr_is_on = False
         if self.mapping.send_address:
-            await self.endpoint.async_send(self.mapping.send_address, [False])
+            await self.endpoint.async_send(
+                self.mapping.send_address,
+                [osc_switch_value(False, self.mapping.osc_type)],
+            )
         self.async_write_ha_state()
 
     def _apply_received_value(self, value: object) -> None:
-        self._attr_is_on = _as_bool(value)
-
-
-def _as_bool(value: object) -> bool:
-    if isinstance(value, str):
-        return value.strip().casefold() not in {"", "0", "false", "off", "no"}
-    return bool(value)
+        self._attr_is_on = as_bool(value, self.mapping.osc_type)
