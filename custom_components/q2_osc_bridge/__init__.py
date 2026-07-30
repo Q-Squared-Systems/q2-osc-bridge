@@ -41,6 +41,7 @@ from .const import (
     SERVICE_SEND,
 )
 from .endpoint import EndpointConfig, Q2OscEndpoint
+from .target_settings import target_settings_from_entry
 from .validators import normalize_osc_arguments, validate_osc_address
 
 _LOGGER = logging.getLogger(__name__)
@@ -107,7 +108,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 def _endpoint_config_from_entry(entry: ConfigEntry) -> EndpointConfig:
     """Convert a config entry to runtime endpoint config."""
-    data = entry.data
+    data = target_settings_from_entry(entry)
     return EndpointConfig(
         entry_id=entry.entry_id,
         name=data[CONF_NAME],

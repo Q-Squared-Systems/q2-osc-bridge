@@ -35,6 +35,7 @@ from .entity_mapping import (
     create_switch_mapping,
     create_text_mapping,
 )
+from .target_settings import target_settings_from_entry
 from .validators import PORT_SCHEMA, normalize_allowed_source_ips, validate_port
 
 
@@ -121,6 +122,7 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Show mapping management actions."""
         menu_options = {
+            "target_settings": "Edit target settings",
             "add_mapping": "Add button control",
             "add_number_mapping": "Add float control",
             "add_integer_mapping": "Add integer control",
@@ -131,6 +133,30 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
         if self.config_entry.options.get(CONF_MAPPINGS):
             menu_options["remove_mapping"] = "Remove entity mapping"
         return self.async_show_menu(step_id="init", menu_options=menu_options)
+
+    async def async_step_target_settings(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Edit OSC target settings."""
+        errors: dict[str, str] = {}
+        defaults = target_settings_from_entry(self.config_entry)
+        if user_input is not None:
+            try:
+                settings = _validate_user_input(user_input)
+            except vol.Invalid:
+                errors["base"] = "invalid_config"
+            else:
+                return self.async_create_entry(
+                    title="",
+                    data={**self.config_entry.options, **settings},
+                )
+
+        return self.async_show_form(
+            step_id="target_settings",
+            data_schema=_user_schema(user_input or defaults),
+            errors=errors,
+        )
 
     async def async_step_add_mapping(
         self,

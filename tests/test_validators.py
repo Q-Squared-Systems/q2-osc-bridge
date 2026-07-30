@@ -5,6 +5,7 @@ import voluptuous as vol
 from voluptuous_serialize import convert
 
 from custom_components.q2_osc_bridge.const import DEFAULT_BIND_ADDRESS
+from custom_components.q2_osc_bridge.target_settings import target_settings_from_entry
 from custom_components.q2_osc_bridge.validators import (
     PORT_SCHEMA,
     normalize_allowed_source_ips,
@@ -16,6 +17,36 @@ from custom_components.q2_osc_bridge.validators import (
 
 def test_default_bind_address_listens_on_all_interfaces() -> None:
     assert DEFAULT_BIND_ADDRESS == "0.0.0.0"
+
+
+def test_target_settings_defaults_include_option_overrides() -> None:
+    entry = type(
+        "Entry",
+        (),
+        {
+            "data": {
+                "name": "Original",
+                "remote_host": "192.0.2.10",
+                "remote_port": 9000,
+                "receive_enabled": True,
+                "local_bind_address": "0.0.0.0",
+                "local_port": 9001,
+                "allowed_source_ips": [],
+            },
+            "options": {
+                "name": "MadMapper",
+                "remote_host": "192.0.2.20",
+                "remote_port": 8000,
+            },
+        },
+    )()
+
+    defaults = target_settings_from_entry(entry)
+
+    assert defaults["name"] == "MadMapper"
+    assert defaults["remote_host"] == "192.0.2.20"
+    assert defaults["remote_port"] == 8000
+    assert defaults["local_bind_address"] == "0.0.0.0"
 
 
 def test_port_schema_is_config_flow_serializable() -> None:

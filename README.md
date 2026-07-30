@@ -56,6 +56,10 @@ The integration owns one asyncio UDP datagram transport per target. That
 transport sends to the configured remote host/port and receives on the local
 bind address/port.
 
+To change target network settings later, open **Configure** on the target and
+choose **Edit target settings**. Existing entity mappings are preserved and the
+target reloads automatically.
+
 ## Sending OSC
 
 The integration registers the action:
@@ -86,8 +90,8 @@ values.
 ## Entity Mappings
 
 Open **Settings > Devices & services > Q2 OSC Bridge**, select **Configure** on
-a target, then choose a mapping action. Reopen Configure for each additional
-mapping.
+a target, then choose an entity mapping action. Reopen Configure for each
+additional mapping.
 
 Q2 OSC Bridge uses the UI word `path` for slash-prefixed OSC routes such as
 `/layer/1/opacity`. OSC formally calls these addresses or address patterns.
@@ -257,7 +261,6 @@ Roadmap:
 - Add editing for existing entity mappings.
 - Add float feedback rounding and min/max clamping.
 - Add binary sensor and select mapping flows.
-- Add endpoint network settings to the options flow.
 - Add import/export for mapping presets.
 - Add value transforms, availability rules, and restore behavior.
 - Add richer OSC bundle handling and timestamp preservation.
