@@ -11,6 +11,9 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_ALLOWED_SOURCE_IPS,
+    CONF_KEEPALIVE_ENABLED,
+    CONF_KEEPALIVE_INTERVAL,
+    CONF_KEEPALIVE_PATH,
     CONF_LOCAL_BIND_ADDRESS,
     CONF_LOCAL_PORT,
     CONF_MAPPINGS,
@@ -24,6 +27,8 @@ from .const import (
     CONF_SEND_ADDRESS,
     CONF_STEP,
     DEFAULT_BIND_ADDRESS,
+    DEFAULT_KEEPALIVE_ENABLED,
+    DEFAULT_KEEPALIVE_INTERVAL,
     DEFAULT_RECEIVE_ENABLED,
     DOMAIN,
 )
@@ -115,6 +120,24 @@ def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
                 CONF_ALLOWED_SOURCE_IPS,
                 default=", ".join(defaults.get(CONF_ALLOWED_SOURCE_IPS, [])),
             ): str,
+            vol.Required(
+                CONF_KEEPALIVE_ENABLED,
+                default=defaults.get(
+                    CONF_KEEPALIVE_ENABLED,
+                    DEFAULT_KEEPALIVE_ENABLED,
+                ),
+            ): bool,
+            vol.Optional(
+                CONF_KEEPALIVE_PATH,
+                default=defaults.get(CONF_KEEPALIVE_PATH, "/xremote"),
+            ): str,
+            vol.Optional(
+                CONF_KEEPALIVE_INTERVAL,
+                default=defaults.get(
+                    CONF_KEEPALIVE_INTERVAL,
+                    DEFAULT_KEEPALIVE_INTERVAL,
+                ),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1)),
         }
     )
 
@@ -566,6 +589,11 @@ def _validate_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
     name = str(user_input[CONF_NAME]).strip()
     remote_host = str(user_input[CONF_REMOTE_HOST]).strip()
     local_bind_address = str(user_input[CONF_LOCAL_BIND_ADDRESS]).strip()
+    keepalive_enabled = bool(user_input.get(CONF_KEEPALIVE_ENABLED, False))
+    keepalive_path = str(user_input.get(CONF_KEEPALIVE_PATH, "")).strip()
+    keepalive_interval = int(
+        user_input.get(CONF_KEEPALIVE_INTERVAL, DEFAULT_KEEPALIVE_INTERVAL)
+    )
 
     if not name:
         raise vol.Invalid("name is required")
@@ -573,6 +601,10 @@ def _validate_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
         raise vol.Invalid("remote host is required")
     if not local_bind_address:
         raise vol.Invalid("local bind address is required")
+    if keepalive_enabled and not keepalive_path:
+        raise vol.Invalid("keepalive path is required")
+    if keepalive_path and not keepalive_path.startswith("/"):
+        raise vol.Invalid("keepalive path must start with /")
 
     return {
         CONF_NAME: name,
@@ -584,4 +616,7 @@ def _validate_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
         CONF_ALLOWED_SOURCE_IPS: normalize_allowed_source_ips(
             user_input.get(CONF_ALLOWED_SOURCE_IPS)
         ),
+        CONF_KEEPALIVE_ENABLED: keepalive_enabled,
+        CONF_KEEPALIVE_PATH: keepalive_path or None,
+        CONF_KEEPALIVE_INTERVAL: keepalive_interval,
     }

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -27,6 +28,9 @@ class EndpointConfig:
     local_bind_address: str
     local_port: int
     allowed_source_ips: list[str] = field(default_factory=list)
+    keepalive_enabled: bool = False
+    keepalive_path: str | None = None
+    keepalive_interval: int = 8
 
 
 @dataclass(slots=True)
@@ -37,8 +41,10 @@ class EndpointDiagnostics:
     sent_messages: int = 0
     decode_errors: int = 0
     send_errors: int = 0
+    keepalive_messages: int = 0
     last_source: str | None = None
     last_message_time: str | None = None
+    last_keepalive_time: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
         """Return a serializable diagnostics payload."""
@@ -47,8 +53,10 @@ class EndpointDiagnostics:
             "sent_messages": self.sent_messages,
             "decode_errors": self.decode_errors,
             "send_errors": self.send_errors,
+            "keepalive_messages": self.keepalive_messages,
             "last_source": self.last_source,
             "last_message_time": self.last_message_time,
+            "last_keepalive_time": self.last_keepalive_time,
         }
 
 
@@ -91,6 +99,7 @@ class Q2OscEndpoint:
         self.diagnostics = EndpointDiagnostics()
         self._transport: asyncio.DatagramTransport | None = None
         self._protocol: Q2OscDatagramProtocol | None = None
+        self._keepalive_task: asyncio.Task[None] | None = None
         self._event_callback = event_callback
         self._message_listeners: set[Callable[[dict[str, Any]], None]] = set()
 
@@ -113,9 +122,11 @@ class Q2OscEndpoint:
         )
         self._transport = transport
         self._protocol = protocol
+        self._start_keepalive()
 
     async def async_stop(self) -> None:
         """Close the UDP transport."""
+        await self._stop_keepalive()
         transport = self._transport
         protocol = self._protocol
         self._transport = None
@@ -125,6 +136,31 @@ class Q2OscEndpoint:
             transport.close()
         if protocol is not None:
             await asyncio.wait_for(protocol.async_wait_closed(), timeout=1)
+
+    def _start_keepalive(self) -> None:
+        """Start the keepalive task when configured."""
+        if not self.config.keepalive_enabled or not self.config.keepalive_path:
+            return
+        loop = self.hass.loop if self.hass is not None else asyncio.get_running_loop()
+        self._keepalive_task = loop.create_task(self._async_keepalive_loop())
+
+    async def _stop_keepalive(self) -> None:
+        """Stop the keepalive task."""
+        task = self._keepalive_task
+        self._keepalive_task = None
+        if task is not None:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+
+    async def _async_keepalive_loop(self) -> None:
+        """Send configured keepalive messages until stopped."""
+        assert self.config.keepalive_path is not None
+        while True:
+            await self.async_send(self.config.keepalive_path)
+            self.diagnostics.keepalive_messages += 1
+            self.diagnostics.last_keepalive_time = datetime.now(UTC).isoformat()
+            await asyncio.sleep(self.config.keepalive_interval)
 
     def add_message_listener(
         self,

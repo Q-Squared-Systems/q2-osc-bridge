@@ -7,6 +7,9 @@ import custom_components.q2_osc_bridge as integration
 from custom_components.q2_osc_bridge.const import (
     ATTR_ENDPOINT,
     CONF_ALLOWED_SOURCE_IPS,
+    CONF_KEEPALIVE_ENABLED,
+    CONF_KEEPALIVE_INTERVAL,
+    CONF_KEEPALIVE_PATH,
     CONF_LOCAL_BIND_ADDRESS,
     CONF_LOCAL_PORT,
     CONF_NAME,
@@ -82,6 +85,9 @@ def test_endpoint_config_uses_target_setting_options() -> None:
             CONF_LOCAL_BIND_ADDRESS: "0.0.0.0",
             CONF_LOCAL_PORT: 9001,
             CONF_ALLOWED_SOURCE_IPS: [],
+            CONF_KEEPALIVE_ENABLED: False,
+            CONF_KEEPALIVE_PATH: None,
+            CONF_KEEPALIVE_INTERVAL: 8,
         },
         options={
             CONF_NAME: "MadMapper",
@@ -91,6 +97,9 @@ def test_endpoint_config_uses_target_setting_options() -> None:
             CONF_LOCAL_BIND_ADDRESS: "127.0.0.1",
             CONF_LOCAL_PORT: 8001,
             CONF_ALLOWED_SOURCE_IPS: ["192.0.2.30"],
+            CONF_KEEPALIVE_ENABLED: True,
+            CONF_KEEPALIVE_PATH: "/xremote",
+            CONF_KEEPALIVE_INTERVAL: 8,
         },
     )
 
@@ -103,3 +112,6 @@ def test_endpoint_config_uses_target_setting_options() -> None:
     assert config.local_bind_address == "127.0.0.1"
     assert config.local_port == 8001
     assert config.allowed_source_ips == ["192.0.2.30"]
+    assert config.keepalive_enabled is True
+    assert config.keepalive_path == "/xremote"
+    assert config.keepalive_interval == 8

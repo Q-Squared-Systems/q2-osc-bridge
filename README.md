@@ -51,6 +51,7 @@ Target setup fields:
 - Local bind address, default `0.0.0.0`
 - Local UDP receive port
 - Optional allowed source IPs
+- Optional keepalive path and interval
 
 The integration owns one asyncio UDP datagram transport per target. That
 transport sends to the configured remote host/port and receives on the local
@@ -59,6 +60,10 @@ bind address/port.
 To change target network settings later, open **Configure** on the target and
 choose **Edit target settings**. Existing entity mappings are preserved and the
 target reloads automatically.
+
+Keepalive can be enabled per target for OSC devices that require a periodic
+subscription or remote-control heartbeat. For X32/M32 feedback, enable
+keepalive, use path `/xremote`, and set the interval to `8` seconds.
 
 ## Sending OSC
 
@@ -225,8 +230,8 @@ on means muted and sends `0`; switch off means unmuted and sends `1`.
 Each fader uses a `0..1` float range with step `0.01`, and uses the same OSC
 path for target and source feedback.
 
-For live X32 feedback, keep `/xremote` active. A Home Assistant automation that
-sends `/xremote` every 8 seconds works well.
+For live X32 feedback, enable target keepalive with path `/xremote` and interval
+`8` seconds.
 
 ## Receive Events
 

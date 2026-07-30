@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import pytest
@@ -107,6 +108,33 @@ def test_endpoint_notifies_and_removes_message_listener() -> None:
     assert len(messages) == 1
     assert messages[0]["address"] == "/mapped"
     assert messages[0]["arguments"] == [7]
+
+
+@pytest.mark.asyncio
+async def test_endpoint_keepalive_sends_configured_path() -> None:
+    endpoint = Q2OscEndpoint(
+        hass=None,
+        config=_endpoint_config(
+            keepalive_enabled=True,
+            keepalive_path="/xremote",
+            keepalive_interval=60,
+        ),
+    )
+    try:
+        await endpoint.async_start()
+    except PermissionError:
+        pytest.skip("local UDP socket binding is blocked in this environment")
+
+    for _ in range(20):
+        if endpoint.diagnostics.keepalive_messages:
+            break
+        await asyncio.sleep(0)
+
+    await endpoint.async_stop()
+
+    assert endpoint.diagnostics.keepalive_messages == 1
+    assert endpoint.diagnostics.sent_messages == 1
+    assert endpoint.diagnostics.last_keepalive_time is not None
 
 
 @pytest.mark.asyncio

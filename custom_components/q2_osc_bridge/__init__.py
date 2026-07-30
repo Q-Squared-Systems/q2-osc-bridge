@@ -30,6 +30,9 @@ from .const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_ENDPOINT,
     CONF_ALLOWED_SOURCE_IPS,
+    CONF_KEEPALIVE_ENABLED,
+    CONF_KEEPALIVE_INTERVAL,
+    CONF_KEEPALIVE_PATH,
     CONF_LOCAL_BIND_ADDRESS,
     CONF_LOCAL_PORT,
     CONF_NAME,
@@ -118,6 +121,9 @@ def _endpoint_config_from_entry(entry: ConfigEntry) -> EndpointConfig:
         local_bind_address=data[CONF_LOCAL_BIND_ADDRESS],
         local_port=data[CONF_LOCAL_PORT],
         allowed_source_ips=list(data.get(CONF_ALLOWED_SOURCE_IPS, [])),
+        keepalive_enabled=bool(data.get(CONF_KEEPALIVE_ENABLED, False)),
+        keepalive_path=data.get(CONF_KEEPALIVE_PATH) or None,
+        keepalive_interval=int(data.get(CONF_KEEPALIVE_INTERVAL, 8)),
     )
 
 

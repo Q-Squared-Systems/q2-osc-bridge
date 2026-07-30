@@ -12,7 +12,10 @@
           "receive_enabled": "Receive enabled",
           "local_bind_address": "Local bind address",
           "local_port": "Local UDP receive port",
-          "allowed_source_ips": "Allowed source IPs"
+          "allowed_source_ips": "Allowed source IPs",
+          "keepalive_enabled": "Keepalive enabled",
+          "keepalive_path": "Keepalive path",
+          "keepalive_interval": "Keepalive interval seconds"
         }
       }
     },
@@ -49,7 +52,10 @@
           "receive_enabled": "Receive enabled",
           "local_bind_address": "Local bind address",
           "local_port": "Local UDP receive port",
-          "allowed_source_ips": "Allowed source IPs"
+          "allowed_source_ips": "Allowed source IPs",
+          "keepalive_enabled": "Keepalive enabled",
+          "keepalive_path": "Keepalive path",
+          "keepalive_interval": "Keepalive interval seconds"
         }
       },
       "add_mapping": {

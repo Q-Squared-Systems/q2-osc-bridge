@@ -21,9 +21,14 @@ CONF_MIN_VALUE = "min_value"
 CONF_MAX_VALUE = "max_value"
 CONF_STEP = "step"
 CONF_OSC_TYPE = "osc_type"
+CONF_KEEPALIVE_ENABLED = "keepalive_enabled"
+CONF_KEEPALIVE_PATH = "keepalive_path"
+CONF_KEEPALIVE_INTERVAL = "keepalive_interval"
 
 DEFAULT_BIND_ADDRESS = "0.0.0.0"
 DEFAULT_RECEIVE_ENABLED = True
+DEFAULT_KEEPALIVE_ENABLED = False
+DEFAULT_KEEPALIVE_INTERVAL = 8
 
 SERVICE_SEND = "send"
 ATTR_ADDRESS = "address"
