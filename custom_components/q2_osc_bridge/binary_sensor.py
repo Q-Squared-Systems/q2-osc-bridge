@@ -11,7 +11,7 @@ from .const import DOMAIN
 from .endpoint import Q2OscEndpoint
 from .entity_base import Q2OscMappingEntity
 from .entity_mapping import mappings_from_entry
-from .switch import _as_bool
+from .switch_encoding import as_bool
 
 
 async def async_setup_entry(
@@ -31,4 +31,4 @@ class Q2OscBinarySensor(Q2OscMappingEntity, BinarySensorEntity):
     _attr_is_on = False
 
     def _apply_received_value(self, value: object) -> None:
-        self._attr_is_on = _as_bool(value)
+        self._attr_is_on = as_bool(value)
