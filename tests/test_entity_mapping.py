@@ -15,6 +15,8 @@ from custom_components.q2_osc_bridge.entity_mapping import (
     mappings_from_entry,
 )
 from custom_components.q2_osc_bridge.x32_presets import (
+    create_x32_aux_fx_fader_mappings,
+    create_x32_aux_fx_mute_mappings,
     create_x32_input_channel_fader_mappings,
     create_x32_input_channel_mute_mappings,
 )
@@ -172,3 +174,40 @@ def test_x32_input_channel_fader_preset_creates_float_numbers() -> None:
     assert mappings[0].osc_type == "f"
     assert mappings[-1].name == "CH 32 Fader"
     assert mappings[-1].send_address == "/ch/32/mix/fader"
+
+
+def test_x32_aux_fx_mute_preset_creates_inverted_integer_switches() -> None:
+    mappings = create_x32_aux_fx_mute_mappings()
+
+    assert len(mappings) == 16
+    assert mappings[0].platform == "switch"
+    assert mappings[0].name == "Aux 01 Mute"
+    assert mappings[0].send_address == "/auxin/01/mix/on"
+    assert mappings[0].receive_address == "/auxin/01/mix/on"
+    assert mappings[0].osc_type == "i:0/1"
+    assert mappings[7].name == "Aux 08 Mute"
+    assert mappings[7].send_address == "/auxin/08/mix/on"
+    assert mappings[8].name == "FX 01 Mute"
+    assert mappings[8].send_address == "/fxrtn/01/mix/on"
+    assert mappings[-1].name == "FX 08 Mute"
+    assert mappings[-1].send_address == "/fxrtn/08/mix/on"
+
+
+def test_x32_aux_fx_fader_preset_creates_float_numbers() -> None:
+    mappings = create_x32_aux_fx_fader_mappings()
+
+    assert len(mappings) == 16
+    assert mappings[0].platform == "number"
+    assert mappings[0].name == "Aux 01 Fader"
+    assert mappings[0].send_address == "/auxin/01/mix/fader"
+    assert mappings[0].receive_address == "/auxin/01/mix/fader"
+    assert mappings[0].min_value == 0
+    assert mappings[0].max_value == 1
+    assert mappings[0].step == 0.01
+    assert mappings[0].osc_type == "f"
+    assert mappings[7].name == "Aux 08 Fader"
+    assert mappings[7].send_address == "/auxin/08/mix/fader"
+    assert mappings[8].name == "FX 01 Fader"
+    assert mappings[8].send_address == "/fxrtn/01/mix/fader"
+    assert mappings[-1].name == "FX 08 Fader"
+    assert mappings[-1].send_address == "/fxrtn/08/mix/fader"

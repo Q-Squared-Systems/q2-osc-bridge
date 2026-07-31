@@ -230,6 +230,39 @@ on means muted and sends `0`; switch off means unmuted and sends `1`.
 Each fader uses a `0..1` float range with step `0.01`, and uses the same OSC
 path for target and source feedback.
 
+### Aux FX Mutes
+
+**Add X32 Aux FX mutes** creates 16 Home Assistant `switch` entities for:
+
+```text
+/auxin/01/mix/on
+...
+/auxin/08/mix/on
+/fxrtn/01/mix/on
+...
+/fxrtn/08/mix/on
+```
+
+These use the same inverted X32 mute behavior as input channel mutes: switch on
+means muted and sends `0`; switch off means unmuted and sends `1`.
+
+### Aux FX Channel Levels
+
+**Add X32 Aux FX channel levels** creates 16 Home Assistant `number` entities
+for:
+
+```text
+/auxin/01/mix/fader
+...
+/auxin/08/mix/fader
+/fxrtn/01/mix/fader
+...
+/fxrtn/08/mix/fader
+```
+
+Each level uses a `0..1` float range with step `0.01`, and uses the same OSC path
+for target and source feedback.
+
 For live X32 feedback, enable target keepalive with path `/xremote` and interval
 `8` seconds.
 
@@ -278,7 +311,8 @@ appropriate, plus runtime counters for:
 - Button controls send no arguments.
 - Float feedback values are accepted as raw floats; display rounding/clamping is
   planned.
-- X32 presets currently cover input channel mutes and input fader levels only.
+- X32 presets currently cover input channel mutes, input fader levels, Aux FX
+  mutes, and Aux FX channel levels only.
 - Binary sensor and select platforms have scaffolding but are not yet exposed in
   the Configure UI.
 

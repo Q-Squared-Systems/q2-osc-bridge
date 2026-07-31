@@ -43,6 +43,8 @@ from .entity_mapping import (
 from .target_settings import target_settings_from_entry
 from .validators import PORT_SCHEMA, normalize_allowed_source_ips, validate_port
 from .x32_presets import (
+    create_x32_aux_fx_fader_mappings,
+    create_x32_aux_fx_mute_mappings,
     create_x32_input_channel_fader_mappings,
     create_x32_input_channel_mute_mappings,
 )
@@ -160,6 +162,8 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
             "add_sensor_mapping": "Add sensor monitor",
             "add_x32_input_channel_mutes": "Add X32 input channel mutes",
             "add_x32_input_channel_faders": "Add X32 input fader levels",
+            "add_x32_aux_fx_mutes": "Add X32 Aux FX mutes",
+            "add_x32_aux_fx_faders": "Add X32 Aux FX channel levels",
         }
         if self.config_entry.options.get(CONF_MAPPINGS):
             menu_options["remove_mapping"] = "Remove entity mapping"
@@ -342,6 +346,34 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="add_x32_input_channel_faders",
+            data_schema=_preset_confirm_schema(user_input),
+        )
+
+    async def async_step_add_x32_aux_fx_mutes(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Add X32 aux input and FX return mute mappings."""
+        if user_input is not None and user_input.get(CONF_CONFIRM):
+            return self._async_create_mapping_entries(create_x32_aux_fx_mute_mappings())
+
+        return self.async_show_form(
+            step_id="add_x32_aux_fx_mutes",
+            data_schema=_preset_confirm_schema(user_input),
+        )
+
+    async def async_step_add_x32_aux_fx_faders(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Add X32 aux input and FX return fader mappings."""
+        if user_input is not None and user_input.get(CONF_CONFIRM):
+            return self._async_create_mapping_entries(
+                create_x32_aux_fx_fader_mappings()
+            )
+
+        return self.async_show_form(
+            step_id="add_x32_aux_fx_faders",
             data_schema=_preset_confirm_schema(user_input),
         )
 
