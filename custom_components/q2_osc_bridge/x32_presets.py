@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 
 from .entity_mapping import (
     OscEntityMapping,
@@ -11,7 +11,9 @@ from .entity_mapping import (
 )
 
 
-def create_x32_input_channel_mute_mappings() -> list[OscEntityMapping]:
+def create_x32_input_channel_mute_mappings(
+    channels: Iterable[int] = range(1, 33),
+) -> list[OscEntityMapping]:
     """Create X32 input channel mute switch mappings."""
     return [
         create_switch_mapping(
@@ -20,11 +22,13 @@ def create_x32_input_channel_mute_mappings() -> list[OscEntityMapping]:
             source_path=f"/ch/{channel:02d}/mix/on",
             osc_type="i:0/1",
         )
-        for channel in range(1, 33)
+        for channel in channels
     ]
 
 
-def create_x32_input_channel_fader_mappings() -> list[OscEntityMapping]:
+def create_x32_input_channel_fader_mappings(
+    channels: Iterable[int] = range(1, 33),
+) -> list[OscEntityMapping]:
     """Create X32 input channel fader float mappings."""
     return [
         create_number_mapping(
@@ -36,13 +40,18 @@ def create_x32_input_channel_fader_mappings() -> list[OscEntityMapping]:
             step=0.01,
             osc_type="f",
         )
-        for channel in range(1, 33)
+        for channel in channels
     ]
 
 
-def create_x32_aux_fx_mute_mappings() -> list[OscEntityMapping]:
-    """Create X32 aux input and FX return mute switch mappings."""
-    return _create_x32_aux_fx_mappings(
+def create_x32_aux_return_mute_mappings(
+    channels: Iterable[int] = range(1, 9),
+) -> list[OscEntityMapping]:
+    """Create X32 aux return mute switch mappings."""
+    return _create_x32_bank_mappings(
+        "Aux",
+        "auxin",
+        channels,
         "Mute",
         "on",
         create_switch_mapping,
@@ -50,13 +59,48 @@ def create_x32_aux_fx_mute_mappings() -> list[OscEntityMapping]:
     )
 
 
-def create_x32_aux_fx_fader_mappings() -> list[OscEntityMapping]:
+def create_x32_aux_return_fader_mappings(
+    channels: Iterable[int] = range(1, 9),
+) -> list[OscEntityMapping]:
+    """Create X32 aux return fader float mappings."""
+    return _create_x32_bank_mappings(
+        "Aux",
+        "auxin",
+        channels,
+        "Fader",
+        "fader",
+        _create_fader_mapping,
+        "f",
+    )
+
+
+def create_x32_aux_fx_mute_mappings(
+    aux_channels: Iterable[int] = range(1, 9),
+    fx_channels: Iterable[int] = range(1, 9),
+) -> list[OscEntityMapping]:
+    """Create X32 aux input and FX return mute switch mappings."""
+    return _create_x32_aux_fx_mappings(
+        "Mute",
+        "on",
+        create_switch_mapping,
+        "i:0/1",
+        aux_channels,
+        fx_channels,
+    )
+
+
+def create_x32_aux_fx_fader_mappings(
+    aux_channels: Iterable[int] = range(1, 9),
+    fx_channels: Iterable[int] = range(1, 9),
+) -> list[OscEntityMapping]:
     """Create X32 aux input and FX return fader float mappings."""
     return _create_x32_aux_fx_mappings(
         "Fader",
         "fader",
         _create_fader_mapping,
         "f",
+        aux_channels,
+        fx_channels,
     )
 
 
@@ -65,18 +109,52 @@ def _create_x32_aux_fx_mappings(
     path_suffix: str,
     factory: Callable[..., OscEntityMapping],
     osc_type: str,
+    aux_channels: Iterable[int],
+    fx_channels: Iterable[int],
 ) -> list[OscEntityMapping]:
     """Create mappings for the X32 Aux/FX fader bank."""
+    mappings: list[OscEntityMapping] = []
+    mappings.extend(
+        _create_x32_bank_mappings(
+            "Aux",
+            "auxin",
+            aux_channels,
+            label,
+            path_suffix,
+            factory,
+            osc_type,
+        )
+    )
+    mappings.extend(
+        _create_x32_bank_mappings(
+            "FX",
+            "fxrtn",
+            fx_channels,
+            label,
+            path_suffix,
+            factory,
+            osc_type,
+        )
+    )
+    return mappings
+
+
+def _create_x32_bank_mappings(
+    name: str,
+    path: str,
+    channels: Iterable[int],
+    label: str,
+    path_suffix: str,
+    factory: Callable[..., OscEntityMapping],
+    osc_type: str,
+) -> list[OscEntityMapping]:
+    """Create mappings for one X32 fader bank."""
     return [
         factory(
             name=f"{name} {channel:02d} {label}",
             target_path=f"/{path}/{channel:02d}/mix/{path_suffix}",
             source_path=f"/{path}/{channel:02d}/mix/{path_suffix}",
             osc_type=osc_type,
-        )
-        for name, path, channels in (
-            ("Aux", "auxin", range(1, 9)),
-            ("FX", "fxrtn", range(1, 9)),
         )
         for channel in channels
     ]

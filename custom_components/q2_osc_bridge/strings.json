@@ -39,6 +39,8 @@
           "add_sensor_mapping": "Add sensor monitor",
           "add_x32_input_channel_mutes": "Add X32 input channel mutes",
           "add_x32_input_channel_faders": "Add X32 input fader levels",
+          "add_x32_aux_return_mutes": "Add X32 Aux return mutes",
+          "add_x32_aux_return_faders": "Add X32 Aux return levels",
           "add_x32_aux_fx_mutes": "Add X32 Aux FX mutes",
           "add_x32_aux_fx_faders": "Add X32 Aux FX channel levels",
           "remove_mapping": "Remove entity mapping"
@@ -119,30 +121,150 @@
       },
       "add_x32_input_channel_mutes": {
         "title": "Add X32 input channel mutes",
-        "description": "Create 32 Home Assistant mute switches for /ch/01..32/mix/on. Switch on means muted, so Q2 OSC Bridge sends 0 for on and 1 for off.",
+        "description": "Select the input channel mute switches to create for /ch/01..32/mix/on. Switch on means muted, so Q2 OSC Bridge sends 0 for on and 1 for off.",
         "data": {
-          "confirm": "Add 32 mute switches"
+          "channel_01": "Channel 01",
+          "channel_02": "Channel 02",
+          "channel_03": "Channel 03",
+          "channel_04": "Channel 04",
+          "channel_05": "Channel 05",
+          "channel_06": "Channel 06",
+          "channel_07": "Channel 07",
+          "channel_08": "Channel 08",
+          "channel_09": "Channel 09",
+          "channel_10": "Channel 10",
+          "channel_11": "Channel 11",
+          "channel_12": "Channel 12",
+          "channel_13": "Channel 13",
+          "channel_14": "Channel 14",
+          "channel_15": "Channel 15",
+          "channel_16": "Channel 16",
+          "channel_17": "Channel 17",
+          "channel_18": "Channel 18",
+          "channel_19": "Channel 19",
+          "channel_20": "Channel 20",
+          "channel_21": "Channel 21",
+          "channel_22": "Channel 22",
+          "channel_23": "Channel 23",
+          "channel_24": "Channel 24",
+          "channel_25": "Channel 25",
+          "channel_26": "Channel 26",
+          "channel_27": "Channel 27",
+          "channel_28": "Channel 28",
+          "channel_29": "Channel 29",
+          "channel_30": "Channel 30",
+          "channel_31": "Channel 31",
+          "channel_32": "Channel 32"
         }
       },
       "add_x32_input_channel_faders": {
         "title": "Add X32 input fader levels",
-        "description": "Create 32 Home Assistant float controls for /ch/01..32/mix/fader with 0..1 range and same-path feedback.",
+        "description": "Select the input fader level controls to create for /ch/01..32/mix/fader with 0..1 range and same-path feedback.",
         "data": {
-          "confirm": "Add 32 fader controls"
+          "channel_01": "Channel 01",
+          "channel_02": "Channel 02",
+          "channel_03": "Channel 03",
+          "channel_04": "Channel 04",
+          "channel_05": "Channel 05",
+          "channel_06": "Channel 06",
+          "channel_07": "Channel 07",
+          "channel_08": "Channel 08",
+          "channel_09": "Channel 09",
+          "channel_10": "Channel 10",
+          "channel_11": "Channel 11",
+          "channel_12": "Channel 12",
+          "channel_13": "Channel 13",
+          "channel_14": "Channel 14",
+          "channel_15": "Channel 15",
+          "channel_16": "Channel 16",
+          "channel_17": "Channel 17",
+          "channel_18": "Channel 18",
+          "channel_19": "Channel 19",
+          "channel_20": "Channel 20",
+          "channel_21": "Channel 21",
+          "channel_22": "Channel 22",
+          "channel_23": "Channel 23",
+          "channel_24": "Channel 24",
+          "channel_25": "Channel 25",
+          "channel_26": "Channel 26",
+          "channel_27": "Channel 27",
+          "channel_28": "Channel 28",
+          "channel_29": "Channel 29",
+          "channel_30": "Channel 30",
+          "channel_31": "Channel 31",
+          "channel_32": "Channel 32"
+        }
+      },
+      "add_x32_aux_return_mutes": {
+        "title": "Add X32 Aux return mutes",
+        "description": "Select the Aux return mute switches to create for /auxin/01..08/mix/on. Switch on means muted, so Q2 OSC Bridge sends 0 for on and 1 for off.",
+        "data": {
+          "aux_01": "Aux 01",
+          "aux_02": "Aux 02",
+          "aux_03": "Aux 03",
+          "aux_04": "Aux 04",
+          "aux_05": "Aux 05",
+          "aux_06": "Aux 06",
+          "aux_07": "Aux 07",
+          "aux_08": "Aux 08"
+        }
+      },
+      "add_x32_aux_return_faders": {
+        "title": "Add X32 Aux return levels",
+        "description": "Select the Aux return level controls to create for /auxin/01..08/mix/fader with 0..1 range and same-path feedback.",
+        "data": {
+          "aux_01": "Aux 01",
+          "aux_02": "Aux 02",
+          "aux_03": "Aux 03",
+          "aux_04": "Aux 04",
+          "aux_05": "Aux 05",
+          "aux_06": "Aux 06",
+          "aux_07": "Aux 07",
+          "aux_08": "Aux 08"
         }
       },
       "add_x32_aux_fx_mutes": {
         "title": "Add X32 Aux FX mutes",
-        "description": "Create 16 Home Assistant mute switches for /auxin/01..08/mix/on and /fxrtn/01..08/mix/on. Switch on means muted, so Q2 OSC Bridge sends 0 for on and 1 for off.",
+        "description": "Select the Aux and FX return mute switches to create for /auxin/01..08/mix/on and /fxrtn/01..08/mix/on. Switch on means muted, so Q2 OSC Bridge sends 0 for on and 1 for off.",
         "data": {
-          "confirm": "Add 16 Aux FX mute switches"
+          "aux_01": "Aux 01",
+          "aux_02": "Aux 02",
+          "aux_03": "Aux 03",
+          "aux_04": "Aux 04",
+          "aux_05": "Aux 05",
+          "aux_06": "Aux 06",
+          "aux_07": "Aux 07",
+          "aux_08": "Aux 08",
+          "fx_01": "FX 01",
+          "fx_02": "FX 02",
+          "fx_03": "FX 03",
+          "fx_04": "FX 04",
+          "fx_05": "FX 05",
+          "fx_06": "FX 06",
+          "fx_07": "FX 07",
+          "fx_08": "FX 08"
         }
       },
       "add_x32_aux_fx_faders": {
         "title": "Add X32 Aux FX channel levels",
-        "description": "Create 16 Home Assistant float controls for /auxin/01..08/mix/fader and /fxrtn/01..08/mix/fader with 0..1 range and same-path feedback.",
+        "description": "Select the Aux and FX return level controls to create for /auxin/01..08/mix/fader and /fxrtn/01..08/mix/fader with 0..1 range and same-path feedback.",
         "data": {
-          "confirm": "Add 16 Aux FX level controls"
+          "aux_01": "Aux 01",
+          "aux_02": "Aux 02",
+          "aux_03": "Aux 03",
+          "aux_04": "Aux 04",
+          "aux_05": "Aux 05",
+          "aux_06": "Aux 06",
+          "aux_07": "Aux 07",
+          "aux_08": "Aux 08",
+          "fx_01": "FX 01",
+          "fx_02": "FX 02",
+          "fx_03": "FX 03",
+          "fx_04": "FX 04",
+          "fx_05": "FX 05",
+          "fx_06": "FX 06",
+          "fx_07": "FX 07",
+          "fx_08": "FX 08"
         }
       },
       "remove_mapping": {
@@ -153,7 +275,8 @@
       }
     },
     "error": {
-      "invalid_mapping": "The entity mapping is invalid. Check its addresses and type-specific settings."
+      "invalid_mapping": "The entity mapping is invalid. Check its addresses and type-specific settings.",
+      "no_preset_selection": "Select at least one entity to add."
     }
   }
 }

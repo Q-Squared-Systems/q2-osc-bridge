@@ -203,9 +203,13 @@ Q2 OSC Bridge includes starter presets for Behringer X32/M32 consoles. These
 presets create a useful group of mapped HA entities without importing the entire
 console surface.
 
+Preset screens show one checkbox per entity and default to nothing selected.
+Choose only the channels you want to create; for example, checking Channel 01
+through Channel 08 creates only those eight mappings.
+
 ### Input Channel Mutes
 
-**Add X32 input channel mutes** creates 32 Home Assistant `switch` entities for:
+**Add X32 input channel mutes** can create Home Assistant `switch` entities for:
 
 ```text
 /ch/01/mix/on
@@ -219,7 +223,7 @@ on means muted and sends `0`; switch off means unmuted and sends `1`.
 
 ### Input Fader Levels
 
-**Add X32 input fader levels** creates 32 Home Assistant `number` entities for:
+**Add X32 input fader levels** can create Home Assistant `number` entities for:
 
 ```text
 /ch/01/mix/fader
@@ -230,9 +234,35 @@ on means muted and sends `0`; switch off means unmuted and sends `1`.
 Each fader uses a `0..1` float range with step `0.01`, and uses the same OSC
 path for target and source feedback.
 
+### Aux Return Mutes
+
+**Add X32 Aux return mutes** can create Home Assistant `switch` entities for:
+
+```text
+/auxin/01/mix/on
+...
+/auxin/08/mix/on
+```
+
+These use the same inverted X32 mute behavior as input channel mutes: switch on
+means muted and sends `0`; switch off means unmuted and sends `1`.
+
+### Aux Return Levels
+
+**Add X32 Aux return levels** can create Home Assistant `number` entities for:
+
+```text
+/auxin/01/mix/fader
+...
+/auxin/08/mix/fader
+```
+
+Each level uses a `0..1` float range with step `0.01`, and uses the same OSC path
+for target and source feedback.
+
 ### Aux FX Mutes
 
-**Add X32 Aux FX mutes** creates 16 Home Assistant `switch` entities for:
+**Add X32 Aux FX mutes** can create Home Assistant `switch` entities for:
 
 ```text
 /auxin/01/mix/on
@@ -248,7 +278,7 @@ means muted and sends `0`; switch off means unmuted and sends `1`.
 
 ### Aux FX Channel Levels
 
-**Add X32 Aux FX channel levels** creates 16 Home Assistant `number` entities
+**Add X32 Aux FX channel levels** can create Home Assistant `number` entities
 for:
 
 ```text
@@ -311,8 +341,8 @@ appropriate, plus runtime counters for:
 - Button controls send no arguments.
 - Float feedback values are accepted as raw floats; display rounding/clamping is
   planned.
-- X32 presets currently cover input channel mutes, input fader levels, Aux FX
-  mutes, and Aux FX channel levels only.
+- X32 presets currently cover input channel mutes, input fader levels, Aux
+  return mutes, Aux return levels, Aux FX mutes, and Aux FX channel levels only.
 - Binary sensor and select platforms have scaffolding but are not yet exposed in
   the Configure UI.
 

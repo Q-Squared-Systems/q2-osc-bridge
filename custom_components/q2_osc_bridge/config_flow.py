@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from typing import Any
 
 import voluptuous as vol
@@ -45,11 +46,22 @@ from .validators import PORT_SCHEMA, normalize_allowed_source_ips, validate_port
 from .x32_presets import (
     create_x32_aux_fx_fader_mappings,
     create_x32_aux_fx_mute_mappings,
+    create_x32_aux_return_fader_mappings,
+    create_x32_aux_return_mute_mappings,
     create_x32_input_channel_fader_mappings,
     create_x32_input_channel_mute_mappings,
 )
 
-CONF_CONFIRM = "confirm"
+X32_INPUT_CHANNEL_FIELDS = tuple(
+    (f"channel_{channel:02d}", channel) for channel in range(1, 33)
+)
+X32_AUX_RETURN_FIELDS = tuple(
+    (f"aux_{channel:02d}", channel) for channel in range(1, 9)
+)
+X32_AUX_FX_FIELDS = (
+    *((f"aux_{channel:02d}", "aux", channel) for channel in range(1, 9)),
+    *((f"fx_{channel:02d}", "fx", channel) for channel in range(1, 9)),
+)
 
 
 class Q2OscBridgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -162,6 +174,8 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
             "add_sensor_mapping": "Add sensor monitor",
             "add_x32_input_channel_mutes": "Add X32 input channel mutes",
             "add_x32_input_channel_faders": "Add X32 input fader levels",
+            "add_x32_aux_return_mutes": "Add X32 Aux return mutes",
+            "add_x32_aux_return_faders": "Add X32 Aux return levels",
             "add_x32_aux_fx_mutes": "Add X32 Aux FX mutes",
             "add_x32_aux_fx_faders": "Add X32 Aux FX channel levels",
         }
@@ -324,14 +338,10 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Add X32 input channel mute mappings."""
-        if user_input is not None and user_input.get(CONF_CONFIRM):
-            return self._async_create_mapping_entries(
-                create_x32_input_channel_mute_mappings()
-            )
-
-        return self.async_show_form(
+        return self._async_step_x32_channel_preset(
             step_id="add_x32_input_channel_mutes",
-            data_schema=_preset_confirm_schema(user_input),
+            user_input=user_input,
+            factory=create_x32_input_channel_mute_mappings,
         )
 
     async def async_step_add_x32_input_channel_faders(
@@ -339,14 +349,32 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Add X32 input channel fader mappings."""
-        if user_input is not None and user_input.get(CONF_CONFIRM):
-            return self._async_create_mapping_entries(
-                create_x32_input_channel_fader_mappings()
-            )
-
-        return self.async_show_form(
+        return self._async_step_x32_channel_preset(
             step_id="add_x32_input_channel_faders",
-            data_schema=_preset_confirm_schema(user_input),
+            user_input=user_input,
+            factory=create_x32_input_channel_fader_mappings,
+        )
+
+    async def async_step_add_x32_aux_return_mutes(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Add X32 aux return mute mappings."""
+        return self._async_step_x32_aux_return_preset(
+            step_id="add_x32_aux_return_mutes",
+            user_input=user_input,
+            factory=create_x32_aux_return_mute_mappings,
+        )
+
+    async def async_step_add_x32_aux_return_faders(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Add X32 aux return fader mappings."""
+        return self._async_step_x32_aux_return_preset(
+            step_id="add_x32_aux_return_faders",
+            user_input=user_input,
+            factory=create_x32_aux_return_fader_mappings,
         )
 
     async def async_step_add_x32_aux_fx_mutes(
@@ -354,12 +382,10 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Add X32 aux input and FX return mute mappings."""
-        if user_input is not None and user_input.get(CONF_CONFIRM):
-            return self._async_create_mapping_entries(create_x32_aux_fx_mute_mappings())
-
-        return self.async_show_form(
+        return self._async_step_x32_aux_fx_preset(
             step_id="add_x32_aux_fx_mutes",
-            data_schema=_preset_confirm_schema(user_input),
+            user_input=user_input,
+            factory=create_x32_aux_fx_mute_mappings,
         )
 
     async def async_step_add_x32_aux_fx_faders(
@@ -367,14 +393,10 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Add X32 aux input and FX return fader mappings."""
-        if user_input is not None and user_input.get(CONF_CONFIRM):
-            return self._async_create_mapping_entries(
-                create_x32_aux_fx_fader_mappings()
-            )
-
-        return self.async_show_form(
+        return self._async_step_x32_aux_fx_preset(
             step_id="add_x32_aux_fx_faders",
-            data_schema=_preset_confirm_schema(user_input),
+            user_input=user_input,
+            factory=create_x32_aux_fx_fader_mappings,
         )
 
     async def async_step_remove_mapping(
@@ -436,6 +458,86 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
         return self.async_create_entry(
             title="",
             data={**self.config_entry.options, CONF_MAPPINGS: mappings},
+        )
+
+    def _async_step_x32_channel_preset(
+        self,
+        step_id: str,
+        user_input: dict[str, Any] | None,
+        factory: Callable[[list[int]], list[OscEntityMapping]],
+    ) -> FlowResult:
+        """Add selected X32 input channel preset mappings."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            channels = _selected_channels(user_input, X32_INPUT_CHANNEL_FIELDS)
+            if channels:
+                return self._async_create_mapping_entries(factory(channels))
+            errors["base"] = "no_preset_selection"
+
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=_preset_selection_schema(
+                X32_INPUT_CHANNEL_FIELDS,
+                user_input,
+            ),
+            errors=errors,
+        )
+
+    def _async_step_x32_aux_return_preset(
+        self,
+        step_id: str,
+        user_input: dict[str, Any] | None,
+        factory: Callable[[list[int]], list[OscEntityMapping]],
+    ) -> FlowResult:
+        """Add selected X32 aux return preset mappings."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            channels = _selected_channels(user_input, X32_AUX_RETURN_FIELDS)
+            if channels:
+                return self._async_create_mapping_entries(factory(channels))
+            errors["base"] = "no_preset_selection"
+
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=_preset_selection_schema(
+                X32_AUX_RETURN_FIELDS,
+                user_input,
+            ),
+            errors=errors,
+        )
+
+    def _async_step_x32_aux_fx_preset(
+        self,
+        step_id: str,
+        user_input: dict[str, Any] | None,
+        factory: Callable[..., list[OscEntityMapping]],
+    ) -> FlowResult:
+        """Add selected X32 aux input and FX return preset mappings."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            aux_channels = [
+                channel
+                for field, bank, channel in X32_AUX_FX_FIELDS
+                if bank == "aux" and user_input.get(field)
+            ]
+            fx_channels = [
+                channel
+                for field, bank, channel in X32_AUX_FX_FIELDS
+                if bank == "fx" and user_input.get(field)
+            ]
+            if aux_channels or fx_channels:
+                return self._async_create_mapping_entries(
+                    factory(aux_channels, fx_channels)
+                )
+            errors["base"] = "no_preset_selection"
+
+        schema_fields = (
+            (field, channel) for field, _bank, channel in X32_AUX_FX_FIELDS
+        )
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=_preset_selection_schema(schema_fields, user_input),
+            errors=errors,
         )
 
 
@@ -543,17 +645,26 @@ def _send_receive_mapping_schema(
     )
 
 
-def _preset_confirm_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
-    """Return a preset confirmation form."""
+def _preset_selection_schema(
+    fields: Iterable[tuple[str, int]],
+    defaults: dict[str, Any] | None = None,
+) -> vol.Schema:
+    """Return a preset selection form with every checkbox off by default."""
     defaults = defaults or {}
     return vol.Schema(
         {
-            vol.Required(
-                CONF_CONFIRM,
-                default=defaults.get(CONF_CONFIRM, True),
-            ): bool,
+            vol.Optional(field, default=defaults.get(field, False)): bool
+            for field, _channel in fields
         }
     )
+
+
+def _selected_channels(
+    user_input: dict[str, Any],
+    fields: Iterable[tuple[str, int]],
+) -> list[int]:
+    """Return selected channel numbers from a preset selection form."""
+    return [channel for field, channel in fields if user_input.get(field)]
 
 
 def _mapping_from_user_input(user_input: dict[str, Any]) -> OscEntityMapping:
