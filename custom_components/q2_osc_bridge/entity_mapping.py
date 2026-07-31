@@ -55,6 +55,11 @@ def mappings_from_entry(entry: Any) -> list[OscEntityMapping]:
     ]
 
 
+def mapping_unique_id(entry_id: str, platform: str, key: str) -> str:
+    """Return the Home Assistant unique ID for a mapping."""
+    return f"{entry_id}_{platform}_{key}"
+
+
 def create_button_mapping(name: str, target_path: str) -> OscEntityMapping:
     """Create a button mapping from user-facing fields."""
     name = name.strip()

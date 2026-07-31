@@ -12,6 +12,7 @@ from custom_components.q2_osc_bridge.entity_mapping import (
     create_sensor_mapping,
     create_switch_mapping,
     create_text_mapping,
+    mapping_unique_id,
     mappings_from_entry,
 )
 from custom_components.q2_osc_bridge.x32_presets import (
@@ -42,6 +43,12 @@ def test_mapping_round_trip_through_config_entry_options() -> None:
 
 def test_mapping_defaults_to_empty_list() -> None:
     assert mappings_from_entry(SimpleNamespace(options={})) == []
+
+
+def test_mapping_unique_id_matches_entity_unique_id_shape() -> None:
+    assert mapping_unique_id("entry-1", "switch", "mapping-1") == (
+        "entry-1_switch_mapping-1"
+    )
 
 
 def test_options_flow_creates_button_mapping_from_target_path() -> None:

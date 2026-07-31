@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_ALLOWED_SOURCE_IPS,
@@ -40,6 +41,7 @@ from .entity_mapping import (
     create_sensor_mapping,
     create_switch_mapping,
     create_text_mapping,
+    mapping_unique_id,
 )
 from .target_settings import target_settings_from_entry
 from .validators import PORT_SCHEMA, normalize_allowed_source_ips, validate_port
@@ -411,6 +413,10 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
         }
         if user_input is not None:
             selected_key = user_input["mapping"]
+            selected_mapping = next(
+                mapping for mapping in mappings if mapping["key"] == selected_key
+            )
+            self._async_remove_mapping_entity(selected_mapping)
             mappings = [
                 mapping for mapping in mappings if mapping["key"] != selected_key
             ]
@@ -459,6 +465,22 @@ class Q2OscBridgeOptionsFlow(config_entries.OptionsFlow):
             title="",
             data={**self.config_entry.options, CONF_MAPPINGS: mappings},
         )
+
+    def _async_remove_mapping_entity(self, mapping: dict[str, Any]) -> None:
+        """Remove the Home Assistant entity registry entry for a mapping."""
+        entity_registry = er.async_get(self.hass)
+        unique_id = mapping_unique_id(
+            self.config_entry.entry_id,
+            str(mapping["platform"]),
+            str(mapping["key"]),
+        )
+        entity_id = entity_registry.async_get_entity_id(
+            str(mapping["platform"]),
+            DOMAIN,
+            unique_id,
+        )
+        if entity_id is not None:
+            entity_registry.async_remove(entity_id)
 
     def _async_step_x32_channel_preset(
         self,

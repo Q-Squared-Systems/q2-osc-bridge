@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .endpoint import Q2OscEndpoint
-from .entity_mapping import OscEntityMapping
+from .entity_mapping import OscEntityMapping, mapping_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +22,11 @@ class Q2OscMappingEntity(Entity):
         self.endpoint = endpoint
         self.mapping = mapping
         self._attr_name = mapping.name
-        self._attr_unique_id = f"{endpoint.entry_id}_{mapping.platform}_{mapping.key}"
+        self._attr_unique_id = mapping_unique_id(
+            endpoint.entry_id,
+            mapping.platform,
+            mapping.key,
+        )
         self._attr_device_info = {
             "identifiers": {(DOMAIN, endpoint.entry_id)},
             "name": endpoint.name,
