@@ -17,10 +17,10 @@ def create_x32_input_channel_mute_mappings(
     """Create X32 input channel mute switch mappings."""
     return [
         create_switch_mapping(
-            name=f"CH {channel:02d} Mute",
+            name=f"Channel {channel:02d}",
             target_path=f"/ch/{channel:02d}/mix/on",
             source_path=f"/ch/{channel:02d}/mix/on",
-            osc_type="i:0/1",
+            osc_type="i:1/0",
         )
         for channel in channels
     ]
@@ -52,10 +52,10 @@ def create_x32_aux_return_mute_mappings(
         "Aux",
         "auxin",
         channels,
-        "Mute",
+        None,
         "on",
         create_switch_mapping,
-        "i:0/1",
+        "i:1/0",
     )
 
 
@@ -80,10 +80,10 @@ def create_x32_aux_fx_mute_mappings(
 ) -> list[OscEntityMapping]:
     """Create X32 aux input and FX return mute switch mappings."""
     return _create_x32_aux_fx_mappings(
-        "Mute",
+        None,
         "on",
         create_switch_mapping,
-        "i:0/1",
+        "i:1/0",
         aux_channels,
         fx_channels,
     )
@@ -105,7 +105,7 @@ def create_x32_aux_fx_fader_mappings(
 
 
 def _create_x32_aux_fx_mappings(
-    label: str,
+    label: str | None,
     path_suffix: str,
     factory: Callable[..., OscEntityMapping],
     osc_type: str,
@@ -143,7 +143,7 @@ def _create_x32_bank_mappings(
     name: str,
     path: str,
     channels: Iterable[int],
-    label: str,
+    label: str | None,
     path_suffix: str,
     factory: Callable[..., OscEntityMapping],
     osc_type: str,
@@ -151,13 +151,21 @@ def _create_x32_bank_mappings(
     """Create mappings for one X32 fader bank."""
     return [
         factory(
-            name=f"{name} {channel:02d} {label}",
+            name=_x32_mapping_name(name, channel, label),
             target_path=f"/{path}/{channel:02d}/mix/{path_suffix}",
             source_path=f"/{path}/{channel:02d}/mix/{path_suffix}",
             osc_type=osc_type,
         )
         for channel in channels
     ]
+
+
+def _x32_mapping_name(name: str, channel: int, label: str | None) -> str:
+    """Return the Home Assistant entity name for an X32 preset mapping."""
+    base_name = f"{name} {channel:02d}"
+    if label is None:
+        return base_name
+    return f"{base_name} {label}"
 
 
 def _create_fader_mapping(

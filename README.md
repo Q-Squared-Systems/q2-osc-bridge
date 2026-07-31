@@ -218,8 +218,8 @@ through Channel 08 creates only those eight mappings.
 ```
 
 The X32 path is named `mix/on`, where `1` means the channel is on and `0` means
-the channel is muted. Q2 OSC Bridge exposes these as mute switches, so switch
-on means muted and sends `0`; switch off means unmuted and sends `1`.
+the channel is muted. Q2 OSC Bridge exposes these as mute switches where switch
+off means muted and sends `0`; switch on means unmuted and sends `1`.
 
 ### Input Fader Levels
 
@@ -244,8 +244,8 @@ path for target and source feedback.
 /auxin/08/mix/on
 ```
 
-These use the same inverted X32 mute behavior as input channel mutes: switch on
-means muted and sends `0`; switch off means unmuted and sends `1`.
+These use the same X32 mute behavior as input channel mutes: switch off means
+muted and sends `0`; switch on means unmuted and sends `1`.
 
 ### Aux Return Levels
 
@@ -273,8 +273,8 @@ for target and source feedback.
 /fxrtn/08/mix/on
 ```
 
-These use the same inverted X32 mute behavior as input channel mutes: switch on
-means muted and sends `0`; switch off means unmuted and sends `1`.
+These use the same X32 mute behavior as input channel mutes: switch off means
+muted and sends `0`; switch on means unmuted and sends `1`.
 
 ### Aux FX Channel Levels
 

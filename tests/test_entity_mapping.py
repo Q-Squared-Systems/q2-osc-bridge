@@ -149,16 +149,16 @@ def test_sensor_mapping_requires_source_path() -> None:
         create_sensor_mapping("Layer Opacity", "layer/1/opacity")
 
 
-def test_x32_input_channel_mute_preset_creates_inverted_integer_switches() -> None:
+def test_x32_input_channel_mute_preset_creates_standard_integer_switches() -> None:
     mappings = create_x32_input_channel_mute_mappings()
 
     assert len(mappings) == 32
     assert mappings[0].platform == "switch"
-    assert mappings[0].name == "CH 01 Mute"
+    assert mappings[0].name == "Channel 01"
     assert mappings[0].send_address == "/ch/01/mix/on"
     assert mappings[0].receive_address == "/ch/01/mix/on"
-    assert mappings[0].osc_type == "i:0/1"
-    assert mappings[-1].name == "CH 32 Mute"
+    assert mappings[0].osc_type == "i:1/0"
+    assert mappings[-1].name == "Channel 32"
     assert mappings[-1].send_address == "/ch/32/mix/on"
 
 
@@ -166,7 +166,7 @@ def test_x32_input_channel_mute_preset_can_create_selected_channels() -> None:
     mappings = create_x32_input_channel_mute_mappings([1, 8])
 
     assert len(mappings) == 2
-    assert [mapping.name for mapping in mappings] == ["CH 01 Mute", "CH 08 Mute"]
+    assert [mapping.name for mapping in mappings] == ["Channel 01", "Channel 08"]
     assert [mapping.send_address for mapping in mappings] == [
         "/ch/01/mix/on",
         "/ch/08/mix/on",
@@ -189,16 +189,16 @@ def test_x32_input_channel_fader_preset_creates_float_numbers() -> None:
     assert mappings[-1].send_address == "/ch/32/mix/fader"
 
 
-def test_x32_aux_return_mute_preset_creates_inverted_integer_switches() -> None:
+def test_x32_aux_return_mute_preset_creates_standard_integer_switches() -> None:
     mappings = create_x32_aux_return_mute_mappings()
 
     assert len(mappings) == 8
     assert mappings[0].platform == "switch"
-    assert mappings[0].name == "Aux 01 Mute"
+    assert mappings[0].name == "Aux 01"
     assert mappings[0].send_address == "/auxin/01/mix/on"
     assert mappings[0].receive_address == "/auxin/01/mix/on"
-    assert mappings[0].osc_type == "i:0/1"
-    assert mappings[-1].name == "Aux 08 Mute"
+    assert mappings[0].osc_type == "i:1/0"
+    assert mappings[-1].name == "Aux 08"
     assert mappings[-1].send_address == "/auxin/08/mix/on"
 
 
@@ -218,20 +218,20 @@ def test_x32_aux_return_fader_preset_creates_float_numbers() -> None:
     assert mappings[-1].send_address == "/auxin/08/mix/fader"
 
 
-def test_x32_aux_fx_mute_preset_creates_inverted_integer_switches() -> None:
+def test_x32_aux_fx_mute_preset_creates_standard_integer_switches() -> None:
     mappings = create_x32_aux_fx_mute_mappings()
 
     assert len(mappings) == 16
     assert mappings[0].platform == "switch"
-    assert mappings[0].name == "Aux 01 Mute"
+    assert mappings[0].name == "Aux 01"
     assert mappings[0].send_address == "/auxin/01/mix/on"
     assert mappings[0].receive_address == "/auxin/01/mix/on"
-    assert mappings[0].osc_type == "i:0/1"
-    assert mappings[7].name == "Aux 08 Mute"
+    assert mappings[0].osc_type == "i:1/0"
+    assert mappings[7].name == "Aux 08"
     assert mappings[7].send_address == "/auxin/08/mix/on"
-    assert mappings[8].name == "FX 01 Mute"
+    assert mappings[8].name == "FX 01"
     assert mappings[8].send_address == "/fxrtn/01/mix/on"
-    assert mappings[-1].name == "FX 08 Mute"
+    assert mappings[-1].name == "FX 08"
     assert mappings[-1].send_address == "/fxrtn/08/mix/on"
 
 
@@ -240,9 +240,9 @@ def test_x32_aux_fx_mute_preset_can_create_selected_banks() -> None:
 
     assert len(mappings) == 3
     assert [mapping.name for mapping in mappings] == [
-        "Aux 01 Mute",
-        "Aux 03 Mute",
-        "FX 02 Mute",
+        "Aux 01",
+        "Aux 03",
+        "FX 02",
     ]
     assert [mapping.send_address for mapping in mappings] == [
         "/auxin/01/mix/on",

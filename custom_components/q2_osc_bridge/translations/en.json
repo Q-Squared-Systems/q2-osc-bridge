@@ -121,7 +121,7 @@
       },
       "add_x32_input_channel_mutes": {
         "title": "Add X32 input channel mutes",
-        "description": "Select the input channel mute switches to create for /ch/01..32/mix/on. Switch on means muted, so Q2 OSC Bridge sends 0 for on and 1 for off.",
+        "description": "Select the input channel mute switches to create for /ch/01..32/mix/on. Switch off means muted, so Q2 OSC Bridge sends 0 for off and 1 for on.",
         "data": {
           "channel_01": "Channel 01",
           "channel_02": "Channel 02",
@@ -197,7 +197,7 @@
       },
       "add_x32_aux_return_mutes": {
         "title": "Add X32 Aux return mutes",
-        "description": "Select the Aux return mute switches to create for /auxin/01..08/mix/on. Switch on means muted, so Q2 OSC Bridge sends 0 for on and 1 for off.",
+        "description": "Select the Aux return mute switches to create for /auxin/01..08/mix/on. Switch off means muted, so Q2 OSC Bridge sends 0 for off and 1 for on.",
         "data": {
           "aux_01": "Aux 01",
           "aux_02": "Aux 02",
@@ -225,7 +225,7 @@
       },
       "add_x32_aux_fx_mutes": {
         "title": "Add X32 Aux FX mutes",
-        "description": "Select the Aux and FX return mute switches to create for /auxin/01..08/mix/on and /fxrtn/01..08/mix/on. Switch on means muted, so Q2 OSC Bridge sends 0 for on and 1 for off.",
+        "description": "Select the Aux and FX return mute switches to create for /auxin/01..08/mix/on and /fxrtn/01..08/mix/on. Switch off means muted, so Q2 OSC Bridge sends 0 for off and 1 for on.",
         "data": {
           "aux_01": "Aux 01",
           "aux_02": "Aux 02",
