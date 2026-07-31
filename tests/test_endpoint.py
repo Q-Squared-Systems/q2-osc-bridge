@@ -4,9 +4,11 @@ import asyncio
 from typing import Any
 
 import pytest
+import voluptuous as vol
 
 from custom_components.q2_osc_bridge.const import EVENT_OSC_MESSAGE
 from custom_components.q2_osc_bridge.endpoint import (
+    DEFAULT_SEND_INTERVAL,
     EndpointConfig,
     Q2OscEndpoint,
     build_osc_message,
@@ -27,6 +29,14 @@ def _endpoint_config(**overrides: Any) -> EndpointConfig:
     }
     values.update(overrides)
     return EndpointConfig(**values)
+
+
+class _Transport:
+    def __init__(self) -> None:
+        self.sent: list[tuple[bytes, tuple[str, int]]] = []
+
+    def sendto(self, data: bytes, addr: tuple[str, int]) -> None:
+        self.sent.append((data, addr))
 
 
 def test_infer_type_tags() -> None:
@@ -90,6 +100,44 @@ def test_endpoint_counts_decode_errors() -> None:
     endpoint.handle_datagram(b"not osc", ("127.0.0.1", 53000))
 
     assert endpoint.diagnostics.decode_errors == 1
+
+
+@pytest.mark.asyncio
+async def test_endpoint_paces_consecutive_sends(monkeypatch: Any) -> None:
+    sleeps: list[float] = []
+
+    async def async_sleep(delay: float) -> None:
+        sleeps.append(delay)
+
+    endpoint = Q2OscEndpoint(
+        hass=None,
+        config=_endpoint_config(send_interval=DEFAULT_SEND_INTERVAL),
+    )
+    transport = _Transport()
+    endpoint._transport = transport
+    monkeypatch.setattr(asyncio, "sleep", async_sleep)
+
+    await endpoint.async_send("/first", [1])
+    await endpoint.async_send("/second", [2])
+
+    assert len(transport.sent) == 2
+    assert sleeps
+    assert sleeps[0] > 0
+    assert endpoint.diagnostics.sent_messages == 2
+
+
+@pytest.mark.asyncio
+async def test_endpoint_counts_invalid_send_errors() -> None:
+    endpoint = Q2OscEndpoint(
+        hass=None,
+        config=_endpoint_config(),
+    )
+    endpoint._transport = _Transport()
+
+    with pytest.raises(vol.Invalid):
+        await endpoint.async_send("invalid", [1])
+
+    assert endpoint.diagnostics.send_errors == 1
 
 
 def test_endpoint_notifies_and_removes_message_listener() -> None:

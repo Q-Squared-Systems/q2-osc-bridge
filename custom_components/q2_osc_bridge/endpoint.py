@@ -15,6 +15,8 @@ from pythonosc.osc_packet import OscPacket
 from .const import EVENT_OSC_MESSAGE
 from .validators import normalize_osc_arguments, validate_osc_address
 
+DEFAULT_SEND_INTERVAL = 0.02
+
 
 @dataclass(slots=True)
 class EndpointConfig:
@@ -31,6 +33,7 @@ class EndpointConfig:
     keepalive_enabled: bool = False
     keepalive_path: str | None = None
     keepalive_interval: int = 8
+    send_interval: float = DEFAULT_SEND_INTERVAL
 
 
 @dataclass(slots=True)
@@ -100,6 +103,8 @@ class Q2OscEndpoint:
         self._transport: asyncio.DatagramTransport | None = None
         self._protocol: Q2OscDatagramProtocol | None = None
         self._keepalive_task: asyncio.Task[None] | None = None
+        self._send_lock = asyncio.Lock()
+        self._last_send_time: float | None = None
         self._event_callback = event_callback
         self._message_listeners: set[Callable[[dict[str, Any]], None]] = set()
 
@@ -177,7 +182,36 @@ class Q2OscEndpoint:
 
         try:
             message = build_osc_message(address, arguments)
-            self._transport.sendto(
+        except Exception:
+            self.diagnostics.send_errors += 1
+            raise
+
+        async with self._send_lock:
+            await self._async_wait_for_send_interval()
+            transport = self._transport
+            if transport is None:
+                raise RuntimeError("OSC endpoint transport is not started")
+            self._send_message(transport, message)
+            self._last_send_time = asyncio.get_running_loop().time()
+
+    async def _async_wait_for_send_interval(self) -> None:
+        """Pace outgoing OSC messages so rapid HA actions are not bursty."""
+        if self._last_send_time is None or self.config.send_interval <= 0:
+            return
+
+        elapsed = asyncio.get_running_loop().time() - self._last_send_time
+        delay = self.config.send_interval - elapsed
+        if delay > 0:
+            await asyncio.sleep(delay)
+
+    def _send_message(
+        self,
+        transport: asyncio.DatagramTransport,
+        message: bytes,
+    ) -> None:
+        """Send one encoded OSC datagram and update diagnostics."""
+        try:
+            transport.sendto(
                 message,
                 (self.config.remote_host, self.config.remote_port),
             )
