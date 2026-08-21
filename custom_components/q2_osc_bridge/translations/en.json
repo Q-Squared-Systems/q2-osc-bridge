@@ -1,7 +1,6 @@
 {
   "title": "Q2 OSC Bridge",
   "config": {
-    "entry_type": "Target",
     "step": {
       "user": {
         "title": "Create OSC target",

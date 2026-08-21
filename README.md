@@ -7,6 +7,9 @@ Open Sound Control (OSC) directly inside Home Assistant Core. It is built for
 HAOS and HACS distribution, and it runs as a normal custom integration rather
 than as an add-on, daemon, or external service.
 
+[![Open this repository in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Q-Squared-Systems&repository=q2-osc-bridge&category=integration)
+[![Start the Q2 OSC Bridge setup flow](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start?domain=q2_osc_bridge)
+
 The current release provides real OSC sending, incoming feedback, Home Assistant
 events, diagnostics, and working entity mappings for buttons, floats, integers,
 booleans, strings, and sensor monitors.
