@@ -22,6 +22,11 @@ except ModuleNotFoundError:
     class _ConfigValidationFallback:
         string: Callable[[Any], str] = str
 
+        @staticmethod
+        def config_entry_only_config_schema(_domain: str) -> vol.Schema:
+            """Return an empty config schema outside Home Assistant."""
+            return vol.Schema({})
+
     cv = _ConfigValidationFallback()
 
 from .const import (
@@ -48,6 +53,8 @@ from .target_settings import target_settings_from_entry
 from .validators import normalize_osc_arguments, validate_osc_address
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 SEND_SERVICE_SCHEMA = vol.Schema(
     {
