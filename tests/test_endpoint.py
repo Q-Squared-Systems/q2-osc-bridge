@@ -115,6 +115,7 @@ async def test_endpoint_paces_consecutive_sends(monkeypatch: Any) -> None:
     )
     transport = _Transport()
     endpoint._transport = transport
+    endpoint._remote_address = ("127.0.0.1", 9000)
     monkeypatch.setattr(asyncio, "sleep", async_sleep)
 
     await endpoint.async_send("/first", [1])
@@ -133,6 +134,7 @@ async def test_endpoint_counts_invalid_send_errors() -> None:
         config=_endpoint_config(),
     )
     endpoint._transport = _Transport()
+    endpoint._remote_address = ("127.0.0.1", 9000)
 
     with pytest.raises(vol.Invalid):
         await endpoint.async_send("invalid", [1])
@@ -208,3 +210,28 @@ async def test_endpoint_stop_releases_udp_port_before_restart() -> None:
     )
     await second.async_start()
     await second.async_stop()
+
+
+@pytest.mark.asyncio
+async def test_endpoint_resolves_target_before_sending(monkeypatch: Any) -> None:
+    endpoint = Q2OscEndpoint(
+        hass=None,
+        config=_endpoint_config(remote_host="osc-device.local", local_port=0),
+    )
+    loop = asyncio.get_running_loop()
+    resolved: list[tuple[object, ...]] = []
+
+    async def async_getaddrinfo(*args: Any, **kwargs: Any) -> list[tuple[Any, ...]]:
+        resolved.append(args)
+        assert kwargs["type"] == 2
+        return [(2, 2, 17, "", ("192.0.2.42", 9000))]
+
+    monkeypatch.setattr(loop, "getaddrinfo", async_getaddrinfo)
+    try:
+        await endpoint.async_start()
+    except PermissionError:
+        pytest.skip("local UDP socket binding is blocked in this environment")
+
+    assert resolved == [("osc-device.local", 9000)]
+    assert endpoint._remote_address == ("192.0.2.42", 9000)
+    await endpoint.async_stop()

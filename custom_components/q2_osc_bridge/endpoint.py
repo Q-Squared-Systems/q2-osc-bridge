@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import socket
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -102,6 +103,7 @@ class Q2OscEndpoint:
         self.diagnostics = EndpointDiagnostics()
         self._transport: asyncio.DatagramTransport | None = None
         self._protocol: Q2OscDatagramProtocol | None = None
+        self._remote_address: tuple[Any, ...] | None = None
         self._keepalive_task: asyncio.Task[None] | None = None
         self._send_lock = asyncio.Lock()
         self._last_send_time: float | None = None
@@ -121,6 +123,17 @@ class Q2OscEndpoint:
     async def async_start(self) -> None:
         """Bind the UDP transport for this endpoint."""
         loop = self.hass.loop if self.hass is not None else asyncio.get_running_loop()
+        address_info = await loop.getaddrinfo(
+            self.config.remote_host,
+            self.config.remote_port,
+            family=_address_family_for_bind_address(self.config.local_bind_address),
+            type=socket.SOCK_DGRAM,
+        )
+        if not address_info:
+            raise OSError(
+                f"Could not resolve OSC target {self.config.remote_host!r}"
+            )
+        self._remote_address = address_info[0][4]
         transport, protocol = await loop.create_datagram_endpoint(
             lambda: Q2OscDatagramProtocol(self),
             local_addr=(self.config.local_bind_address, self.config.local_port),
@@ -136,6 +149,7 @@ class Q2OscEndpoint:
         protocol = self._protocol
         self._transport = None
         self._protocol = None
+        self._remote_address = None
 
         if transport is not None:
             transport.close()
@@ -210,11 +224,11 @@ class Q2OscEndpoint:
         message: bytes,
     ) -> None:
         """Send one encoded OSC datagram and update diagnostics."""
+        remote_address = self._remote_address
+        if remote_address is None:
+            raise RuntimeError("OSC endpoint target is not resolved")
         try:
-            transport.sendto(
-                message,
-                (self.config.remote_host, self.config.remote_port),
-            )
+            transport.sendto(message, remote_address)
             self.diagnostics.sent_messages += 1
         except Exception:
             self.diagnostics.send_errors += 1
@@ -266,6 +280,11 @@ class Q2OscEndpoint:
             self._event_callback(EVENT_OSC_MESSAGE, event_data)
             return
         self.hass.bus.async_fire(EVENT_OSC_MESSAGE, event_data)
+
+
+def _address_family_for_bind_address(bind_address: str) -> socket.AddressFamily:
+    """Return the socket family compatible with the configured bind address."""
+    return socket.AF_INET6 if ":" in bind_address else socket.AF_INET
 
 
 def build_osc_message(address: str, arguments: Any = None) -> bytes:

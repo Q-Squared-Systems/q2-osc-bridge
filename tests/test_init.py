@@ -3,6 +3,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Any
 
+import pytest
+
 import custom_components.q2_osc_bridge as integration
 from custom_components.q2_osc_bridge.const import (
     ATTR_ENDPOINT,
@@ -115,3 +117,28 @@ def test_endpoint_config_uses_target_setting_options() -> None:
     assert config.keepalive_enabled is True
     assert config.keepalive_path == "/xremote"
     assert config.keepalive_interval == 8
+
+
+async def test_setup_entry_retries_after_udp_bind_error(monkeypatch: Any) -> None:
+    entry = SimpleNamespace(
+        entry_id="entry-1",
+        title="Stage Rack",
+        data={
+            CONF_NAME: "Stage Rack",
+            CONF_REMOTE_HOST: "192.0.2.20",
+            CONF_REMOTE_PORT: 8000,
+            CONF_RECEIVE_ENABLED: True,
+            CONF_LOCAL_BIND_ADDRESS: "127.0.0.1",
+            CONF_LOCAL_PORT: 8001,
+        },
+        options={},
+    )
+    hass = SimpleNamespace(data={})
+
+    async def raise_bind_error(self: Q2OscEndpoint) -> None:
+        raise OSError("Address already in use")
+
+    monkeypatch.setattr(Q2OscEndpoint, "async_start", raise_bind_error)
+
+    with pytest.raises(integration.ConfigEntryNotReady):
+        await integration.async_setup_entry(hass, entry)

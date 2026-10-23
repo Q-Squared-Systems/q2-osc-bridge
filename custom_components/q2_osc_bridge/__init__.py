@@ -9,12 +9,13 @@ from typing import Any
 import voluptuous as vol
 
 try:
-    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
     from homeassistant.core import HomeAssistant, ServiceCall
     from homeassistant.helpers import config_validation as cv
     from homeassistant.helpers import device_registry as dr
 except ModuleNotFoundError:
     ConfigEntry = Any
+    ConfigEntryNotReady = RuntimeError
     HomeAssistant = Any
     ServiceCall = Any
     dr = None
@@ -91,7 +92,12 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up one configured OSC endpoint."""
     endpoint = Q2OscEndpoint(hass, _endpoint_config_from_entry(entry))
-    await endpoint.async_start()
+    try:
+        await endpoint.async_start()
+    except OSError as err:
+        raise ConfigEntryNotReady(
+            f"Unable to start OSC endpoint {entry.title}: {err}"
+        ) from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = endpoint
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
