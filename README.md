@@ -16,14 +16,23 @@ booleans, strings, and sensor monitors.
 
 ## Installation
 
-### HACS Custom Repository
+### HACS (recommended)
+
+1. In HACS, open **Integrations** and search for **Q2 OSC Bridge**.
+2. Select **Q2 OSC Bridge** and choose **Download**.
+3. Restart Home Assistant.
+4. Add **Q2 OSC Bridge** from **Settings > Devices & services**.
+
+### HACS Custom Repository (fallback)
+
+If Q2 OSC Bridge is not yet visible in HACS search, add it as a custom
+repository instead:
 
 1. In HACS, open **Custom repositories**.
-2. Add `https://github.com/Q-Squared-Systems/q2-osc-bridge`.
-3. Choose category `Integration`.
-4. Install **Q2 OSC Bridge**.
-5. Restart Home Assistant.
-6. Add **Q2 OSC Bridge** from **Settings > Devices & services**.
+2. Add `https://github.com/Q-Squared-Systems/q2-osc-bridge` with category
+   **Integration**.
+3. Install **Q2 OSC Bridge**, restart Home Assistant, then add it from
+   **Settings > Devices & services**.
 
 ### Manual Install
 
